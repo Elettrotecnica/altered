@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<message_catalog package_key="altered" locale="en_US" charset="ISO-8859-1">
+
+  <msg key="Code">Code</msg>
+  <msg key="Code_is_not_unique">Code is not unique</msg>
+  <msg key="Create_Product">Create Product</msg>
+  <msg key="Description">Description</msg>
+  <msg key="Edit_Product">Edit Product</msg>
+  <msg key="Name">Name</msg>
+  <msg key="Product">Product</msg>
+  <msg key="Products">Products</msg>
+  <msg key="Products_List">Products List</msg>
+</message_catalog>
