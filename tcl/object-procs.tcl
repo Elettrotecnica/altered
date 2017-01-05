@@ -97,6 +97,27 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create description
 	}
 
+    ::xo::db::require sequence \
+	-name alt_products_product_code_seq \
+	-start_with 1 -increment_by 1
+
+    Product instproc gen_code {} {
+	if {${:code} eq ""} {
+	    set :code [format "%06s" [::xo::dc get_value nextval "
+              select nextval('alt_products_product_code_seq')"]]
+	}
+    }
+
+    Product instproc save_new {} {
+	:gen_code
+	next
+    }
+    
+    Product instproc save {} {
+	:gen_code
+	next
+    }
+
     #
     ## Document
     #

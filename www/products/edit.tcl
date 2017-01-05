@@ -21,8 +21,9 @@ set context [list [list list #altered.Products_List#] $page_title]
 ad_form -name addedit \
     -form {
 	{item_id:key}
-	{code:text
+	{code:text,optional
 	    {label #altered.Code#}
+	    {html {readonly ""}}
 	}
 	{name:text
 	    {label #altered.Name#}
