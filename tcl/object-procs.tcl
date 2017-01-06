@@ -112,7 +112,7 @@ namespace eval ::alt {
 	:gen_code
 	next
     }
-    
+
     Product instproc save {} {
 	:gen_code
 	next
@@ -133,6 +133,7 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create party_id -datatype integer -references "[::alt::Party table_name]([alt::Party id_column])"
 	    ::xo::db::Attribute create location_id -datatype integer -references "[::alt::Location table_name]([alt::Location id_column])"
 	    ::xo::db::Attribute create description
+	    ::xo::db::Attribute create confirmed_p -datatype boolean -default false
 	}
 
     ::xo::db::require index -table [::alt::Document table_name] -unique true -col "code,year"
@@ -175,13 +176,6 @@ namespace eval ::alt {
 	-pretty_plural "#altered.PurchaseInvoices#" \
 	-superclass ::alt::Document
 
-    ::xo::db::require view alt_purchase_invoicesi "
-          select d.*, i.*
-          from [::alt::Document        table_name] d,
-               [::alt::PurchaseInvoice table_name] i
-            where d.[alt::Document id_column] = i.[alt::PurchaseInvoice id_column]" \
-	-rebuild_p true
-
     #
     ## Purchase invoice line
     #
@@ -192,13 +186,6 @@ namespace eval ::alt {
 	-pretty_name   "#altered.PurchaseInvoiceLine#" \
 	-pretty_plural "#altered.PurchaseInvoiceLines#" \
 	-superclass ::alt::DocumentDetail
-
-    ::xo::db::require view alt_purchase_invoice_linesi "
-          select dl.*, l.*
-          from [::alt::DocumentDetail      table_name] dl,
-               [::alt::PurchaseInvoiceLine table_name] l
-            where dl.[alt::DocumentDetail id_column] = l.[alt::PurchaseInvoiceLine id_column]" \
-	-rebuild_p true
 
     #
     ## Sale invoice
@@ -211,13 +198,6 @@ namespace eval ::alt {
 	-pretty_plural "#altered.SaleInvoices#" \
 	-superclass ::alt::Document
 
-    ::xo::db::require view alt_sale_invoicesi "
-          select d.*, i.*
-          from [::alt::Document    table_name] d,
-               [::alt::SaleInvoice table_name] i
-            where d.[alt::Document id_column] = i.[alt::SaleInvoice id_column]" \
-	-rebuild_p true
-
     #
     ## Sale invoice line
     #
@@ -229,12 +209,80 @@ namespace eval ::alt {
 	-pretty_plural "#altered.SaleInvoiceLines#" \
 	-superclass ::alt::DocumentDetail
 
+    #
+    ## Payment dates
+    #
+
+    ::xo::db::Class create PaymentDate \
+	-id_column "date_id" \
+    	-table_name "alt_pay_dates" \
+	-pretty_name   "#altered.PayDate#" \
+	-pretty_plural "#altered.Paydates#" \
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create document_id -datatype integer -references [alt::Document table_name]([alt::Document id_column])
+	    ::xo::db::Attribute create due_date -datatype date
+	    ::xo::db::Attribute create closing_date -datatype date
+	    ::xo::db::Attribute create amount -datatype number
+	}
+
+    ::xo::db::require index -table [::alt::PaymentDate table_name] -col document_id
+
+    ::xo::db::Class create Payment \
+	-id_column "payment_id" \
+    	-table_name "alt_payments" \
+	-pretty_name   "#altered.Payment#" \
+	-pretty_plural "#altered.Payments#" \
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create date_id -datatype integer -references [alt::PaymentDate table_name]([alt::PaymentDate id_column])
+	    ::xo::db::Attribute create date -datatype date
+	    ::xo::db::Attribute create amount -datatype number
+	}
+
+    ::xo::db::require index -table [::alt::Payment table_name] -col date_id
+
+    #
+    ## Table Views
+    #
+
+    ::xo::dc dml drop_view "drop view alt_document_amountsi cascade"
+    ::xo::db::require view alt_document_amountsi "
+      select document_id,
+             sum(amount) as amount,
+             sum((select sum(amount) from [::alt::Payment table_name] 
+                   where date_id = [::alt::PaymentDate id_column]))  as paid_amount
+        from [::alt::PaymentDate table_name] d
+         group by document_id"
+    
+    ::xo::db::require view alt_purchase_invoicesi "
+          select d.*, i.*, am.amount, am.paid_amount
+          from [::alt::Document        table_name] d,
+               [::alt::PurchaseInvoice table_name] i,
+               alt_document_amountsi am
+            where d.[alt::Document id_column] = i.[alt::PurchaseInvoice id_column]
+              and d.[alt::Document id_column] = am.document_id" \
+	-rebuild_p true
+
+    ::xo::db::require view alt_purchase_invoice_linesi "
+          select dl.*, l.*
+          from [::alt::DocumentDetail      table_name] dl,
+               [::alt::PurchaseInvoiceLine table_name] l
+            where dl.[alt::DocumentDetail id_column] = l.[alt::PurchaseInvoiceLine id_column]" \
+	-rebuild_p true
+
+    ::xo::db::require view alt_sale_invoicesi "
+          select d.*, i.*, am.amount, am.paid_amount
+          from [::alt::Document    table_name] d,
+               [::alt::SaleInvoice table_name] i,
+               alt_document_amountsi am
+            where d.[alt::Document id_column] = i.[alt::SaleInvoice id_column]
+              and d.[alt::Document id_column] = am.document_id" \
+	-rebuild_p true
+
     ::xo::db::require view alt_sale_invoice_linesi "
           select dl.*, l.*
           from [::alt::DocumentDetail  table_name] dl,
                [::alt::SaleInvoiceLine table_name] l
             where dl.[alt::DocumentDetail id_column] = l.[alt::SaleInvoiceLine id_column]" \
 	-rebuild_p true
-
 
 }
