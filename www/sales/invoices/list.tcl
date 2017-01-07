@@ -11,10 +11,10 @@ ad_page_contract {
     {to_amount              ""}
     {f_is_confirmed_p       ""}
     {f_is_paid_p            ""}
-    
+
     {rows_per_page:naturalnum 30}
     orderby:optional
-    page:naturalnum,optional    
+    page:naturalnum,optional
 }
 
 set page_title "#altered.Sale_Invoices_List#"
@@ -150,6 +150,12 @@ if {[template::form is_valid filter]} {
 	#     link_html {title "Stampa fattura con prezzo"}
 	#     sub_class narrow
         # }
+	# print_with_mail {
+	#     link_url_col print_with_mail_url
+	#     display_template {<img src="/resources/mis-base/printer_mail.gif" border="0">}
+	#     link_html {title "Stampa fattura con prezzo e invia al cliente"}
+	#     sub_class narrow
+	# }
 	# actions {
 	#     label "Azioni"
 	#     display_template $line_actions
@@ -175,48 +181,40 @@ template::list::create \
 	    link_html {title "#altered.Edit_Invoice#"}
 	    sub_class narrow
 	}
-	print_with_mail {
-	    link_url_col print_with_mail_url
-	    display_template {<img src="/resources/mis-base/printer_mail.gif" border="0">}
-	    link_html {title "Stampa fattura con prezzo e invia al cliente"}
-	    sub_class narrow
-	}
         invoice_num {
-	    label "N. fattura"
+	    label "#altered.Invoice_Num#"
 	    link_url_col lines_url
-	    link_html {title "Dettaglio fattura/nota di credito"}
+	    link_html {title "#altered.Go_to_invoice_lines#"}
 	}
 	invoice_date {
-	    label "Dt. fattura"
+	    label "#altered.Invoice_Date#"
 	    display_col invoice_date_pretty
-	    link_url_col pay_url
-	    link_html {title "Modifica Cond. di Pagamento"}
 	}
 	customer_name {
-	    label "Ragione sociale"
-	    link_url_col cust_url
-	    link_html {title "Visualizza/Modifica cliente"}
+	    label "#altered.Customer_Name#"
+	    link_url_col customer_url
+	    link_html {title "#altered.Go_to_party#"}
 	}
 	invoice_amount {
 	    display_col invoice_amount_pretty
-	    label "Totale Fattura"
+	    label "#altered.Invoice_Amount#"
 	    html {align right}
 	    aggregate "sum"
 	}
 	paid_amount {
-	    display_col invoice_amount_pretty
-	    label "Totale Fattura"
+	    display_col paid_amount_pretty
+	    label "#altered.Paid_Amount#"
 	    html {align right}
 	    aggregate "sum"
 	}
-	is_confirmed_p_pretty {
-	    label "Conf."
+	is_confirmed_p {
+	    label "#altered.Approved#"
 	    link_url_col approve_reset_url
-	    link_html {title "Conferma/Ripristina fattura/nota di credito"}
+	    link_html {title "#altered.Confirm/Reset#"}
 	    html {align center}
 	}
 	is_paid_p {
-	    label "Pag."
+	    label "#altered.Completely_Paid#"
 	    html {align center}
 	}
 	delete {
@@ -229,231 +227,122 @@ template::list::create \
     -orderby {
         default_value "invoice_date,desc"
         invoice_date {
-	    label "Data"
-	    orderby_asc "invoice_date, invoice_num"
-	    orderby_desc "invoice_date desc, invoice_num desc"
+	    label "#altered.Invoice_Date#"
+	    orderby_asc "i.date asc, i.code asc"
+	    orderby_desc "i.date desc, i.code desc"
 	}
         invoice_num {
-	    label "N. fattura"
-	    orderby_asc "invoice_num"
-	    orderby_desc "invoice_num desc"
+	    label "#altered.Invoice_Num#"
+	    orderby_asc "i.code asc"
+	    orderby_desc "i.code desc"
 	}
         customer_name {
-	    label "Cliente"
-	    orderby_asc "c.upper_title, invoice_date, invoice_num"
-	    orderby_desc "c.upper_title desc, invoice_date, invoice_num"
+	    label "#altered.Customer_Name#"
+	    orderby_asc "c.title asc, i.date asc, i.code asc"
+	    orderby_asc "c.title desc, i.date desc, i.code desc"
 	}
     } \
     -filters {
 	search_invoice_num {
 	    hide_p 1
-            where_clause {[ah::search_clause_f -search_word $search_invoice_num -search_field i.invoice_num]}
+            where_clause {(:search_invoice_num is null or upper(i.code) like '%' || upper(:search_invoice_num) || '%')}
 	}
 	search_invoice_id {
 	    hide_p 1
-            where_clause {sale_invoice_id = :search_invoice_id}
+            where_clause {(:search_invoice_id is null or i.document_id = :search_invoice_id)}
 	}
 	search_customer_name {
 	    hide_p 1
-            where_clause {[ah::search_clause_f -search_word $search_customer_name -search_field c.upper_title]}
+            where_clause {(:search_customer_name is null or upper(c.title) like '%' || upper(:search_customer_name) || '%')}	    
 	}
-        search_rep_id {
-	    hide_p 1
-	    where_clause {i.sale_rep_id = :search_rep_id}
-        }
 	search_customer_code {
 	    hide_p 1
-            where_clause {[ah::search_clause_f -search_word $search_customer_code -search_field c.party_code]}
-	}
-	search_abi {
-	    hide_p 1
-            where_clause {:search_abi = b.abi}
+            where_clause {(:search_customer_code is null or upper(c.code) like '%' || upper(:search_customer_code) || '%')}	    	    
 	}
         from_date {
             hide_p 1
-            where_clause {i.invoice_date >= :from_date_ansi}
+            where_clause {(:from_date is null or i.invoice_date >= :from_date)}
         }
         to_date {
             hide_p 1
-            where_clause {i.invoice_date <= :to_date_ansi}
+            where_clause {(:to_date is null or i.invoice_date <= :to_date)}	    
         }
-        from_date_ansi {hide_p 1}
-        to_date_ansi {hide_p 1}
-	from_amount_pretty {
+	from_amount {
 	    hide_p 1
 	    where_clause {(:from_amount is null or i.invoice_amount >= :from_amount)}
 	}
-	from_amount {hide_p 1}
-	to_amount_pretty {
+	to_amount {
 	    hide_p 1
 	    where_clause {(:to_amount is null or i.invoice_amount <= :to_amount)}
 	}
-        to_amount {hide_p 1}
-        f_invoice_type_id {
-	    hide_p 1
-	    where_clause {i.invoice_type_id = :f_invoice_type_id}
-        }
-	search_counter_section {
-	    hide_p 1
-            where_clause {(:search_counter_section is null or :search_counter_section = (
-		select counter_section from mis_counters where counter_id = (
-		    select counter_id from mis_invoice_types where invoice_type_id = i.invoice_type_id)))}
-	}
         f_is_confirmed_p {
             hide_p 1
-	    where_clause {i.is_confirmed_p = :f_is_confirmed_p}
+	    where_clause {(:f_is_confirmed_p is not null or i.confirmed_p = :f_is_confirmed_p)}
         }
-        search_carrier_id {
-            hide_p 1
-            where_clause {exists (select 1 from mis_delivery_notes 
-                                    where carrier_id = :search_carrier_id 
-                                      and sale_invoice_id = i.sale_invoice_id)}
-        }
-	f_payment_type_id {
-	    hide_p 1
-	    where_clause {(select payment_type_id from mis_payments where payment_id = i.payment_id) = :f_payment_type_id}
-	}
-	f_iva_id {
-	    hide_p 1
-	    where_clause {exists (select 1 from mis_sale_invoice_lines where sale_invoice_id = i.sale_invoice_id and iva_id = :f_iva_id)}
-	}
         f_is_paid_p {
             hide_p 1
-	    where_clause {not exists (select 1 from mis_sale_paydates 
-	      where invoice_id = i.sale_invoice_id and not is_closed_p) = :f_is_paid_p}
+	    where_clause {(:f_is_paid_p is not null or (i.amount = i.paid_amount) = :f_is_paid_p)}
         }
-	f_has_invoice_mail_p {
-	    hide_p 1
-	    where_clause {(exists (select 1 
-                                     from mis_invoice_mail 
-                                    where sale_invoice_id = i.sale_invoice_id 
-                                      and sent       is not null limit 1)) = :f_has_invoice_mail_p}
-	}
-	f_has_attachment_p {
-	    hide_p 1
-	    where_clause {(:f_has_attachment_p is null or (exists (
-	      select 1 from attachments a, fs_objects o
-	      where a.object_id = i.sale_invoice_id
-		and a.item_id = o.object_id
-		and name not like '%invoice-' || i.sale_invoice_id || '.pdf'
-		  limit 1)) = :f_has_attachment_p)}
-	}
         rows_per_page {
 	    label "Righe per pagina"
   	    values {{10 10} {30 30} {100 100} {Tutte 9999999}}
 	    where_clause {1 = 1}
             default_value 30
         }
-    } 
+    }
 
 
 # eseguo la query solo in assenza di errori nei filtri del form
 if {![info exists errnum]} {
     set extend_cols {
-	edit_url 
-	print_url 
-	attach_url
-	save_url
-	attach_class
-	print_with_prices_url 
-	print_with_mail_url 
-	reprint_url 
-	lines_url 
-	pay_url 
-	cust_url 
-	approve_reset_url 
-	delete_url 
-	is_confirmed_p_pretty
-	delivery_codes 
-	clone_url
-	sum_amount
+	edit_url
+	lines_url
+	customer_url
+	approve_reset_url
+	delete_url
+	paid_amount_pretty
 	invoice_amount_pretty
-        ack_url
     }
-    
+
     db_multirow -extend $extend_cols invoices query "
 	select i.*,
-               
-        from alt_sale_invoicesi i
+               c.code as customer_code,
+               c.title as customer_name
+        from alt_sale_invoicesi i,
 	     alt_parties c
-        where i.invoice_type_id = t.invoice_type_id
-	  and c.party_id = i.customer_id
-        [template::list::page_where_clause -name invoices -key i.sale_invoice_id -and]
+        where c.party_id = i.party_id
+        [template::list::page_where_clause -name invoices -key i.document_id -and]
         [template::list::orderby_clause -name invoices -orderby]
-    " { 
-        # ottengo i numeri di DDT collegati alla fattura
-	foreach delivery_code [db_list query "       
-	  select delivery_code from mis_delivery_notes
-	    where sale_invoice_id = :sale_invoice_id"] {
-	    set delivery_url [export_vars -base "/mis-sales/deliveries/list" {{search_delivery_code $delivery_code}}]
-	    lappend delivery_codes "<a href='$delivery_url'>$delivery_code</a>"
-	}
-	# rimuovo le parentesi graffe che delimitano la lista
-	set delivery_codes [join $delivery_codes " "]
+    " {
+	set is_paid_p [expr {$amount == $paid_amount ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
 
-	set is_paid_p [ad_decode $is_paid_p t Si f No No]
-	
-	set clone_url   [export_vars -base "clone" {sale_invoice_id}]
-	set edit_url    [export_vars -base "add-edit" {sale_invoice_id customer_id}]
-	set reprint_url [export_vars -base "reprint" {sale_invoice_id}]
-	set lines_url   [export_vars -base "lines" {sale_invoice_id}]
-	set pay_url     [export_vars -base "add-edit-pay" {sale_invoice_id}]
-	set delete_url  [export_vars -base "delete" {sale_invoice_id}]
-	set cust_url    [export_vars -base "/mis-base/parties/add-edit" {{item_id $customer_id} {is_customer_p t}}]
-	set attach_url  [export_vars -base "/mis-base/attachments" {{object_id $sale_invoice_id} {context $next_context}}]
-	set save_url    [export_vars -base "/mis-purc/prices/save-into-pricelist" {{item_id $sale_invoice_id} {return_url $this_url}}]
+	set edit_url     [export_vars -base "edit" {document_id}]
+	set lines_url    [export_vars -base "lines" {document_id}]
+	set delete_url   [export_vars -base "delete" {document_id}]
+	set customer_url [export_vars -base "[ad_conn package_key]/parties/edit" {party_id}]
 
-	if {$dot_matrix_printer_p} {
-	    set print_url             [export_vars -base "print-mod" {sale_invoice_id}]
-	    set print_with_prices_url [export_vars -base "print-no-prices" {sale_invoice_id}]
-	    set print_with_mail_url   [export_vars -base "print-with-mail" {sale_invoice_id}]
+	if {$confirmed_p} {
+	    set approve_reset_url [export_vars -base "reset" {document_id}]
 	} else {
-	    set print_url             [export_vars -base "print-no-prices" {sale_invoice_id}]
-	    set print_with_prices_url [export_vars -base "print-with-prices" {sale_invoice_id}]
-	    set print_with_mail_url   [export_vars -base "print-with-mail" {sale_invoice_id}]
-	}
-	
-	# Verifico se ho degli allegati.
-	if {$has_attachments_p} {
-	    set attach_class "has-attachment"
-	} else {
-	    set attach_class ""
+	    set approve_reset_url [export_vars -base "approve" {document_id}]
 	}
 
-	if {$ack_sent_p} {
-	    set ack_sent_p Si
-	    set ack_url [export_vars -base "/mis-base/mail/mail-list" {object_id {prev_url $this_url} {prev_url_title $page_title}}]
-	} else {
-	    set ack_sent_p No
-	    set ack_url ""
-	}
-	
-	if {$is_confirmed_p} {
-	    set approve_reset_url [export_vars -base "reset" {sale_invoice_id}]
-	} else {
-	    set approve_reset_url [export_vars -base "approve" {sale_invoice_id}]
-	}
+	set delete_url [export_vars -base "[ad_conn package_key]/delete" {{item_id $document_id}}]
 
-	set delete_url [export_vars -base "delete" {sale_invoice_id}]
-	set cust_url   [export_vars -base "/mis-base/parties/add-edit" {{item_id $customer_id} {is_customer_p t}}]
-	
-	if {$is_invoice ne t} {
-	    set invoice_amount [expr {$invoice_amount * -1.00}]
-	}
-        set sum_amount $invoice_amount
-	set invoice_amount_pretty [ah::edit_num $invoice_amount 2]
-	
-	set is_confirmed_p_pretty [ad_decode $is_confirmed_p t Si f No No]
+	set amount_pretty      [lc_numeric $amount]
+	set paid_amount_pretty [lc_numeric $paid_amount]	
+
+	set is_confirmed_p [expr {$is_confirmed_p ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
     }
-    
+
     # save current url vars for future reuse
-    ad_set_client_property mis-sales invoices/list [export_vars -entire_form -no_empty]
-    
+    ad_set_client_property [ad_conn package_key] [ad_conn url] [export_vars -entire_form -no_empty]
+
 } else {
-    
+
     # In caso di errore azzero le variabili di sessione salvate.
-    ad_set_client_property mis-sales invoices/list ""
-    
-    # creo una multirow fittizia 
+    ad_set_client_property [ad_conn package_key] [ad_conn url] ""
+
+    # creo una multirow fittizia
     template::multirow create invoices dummy
 }
