@@ -244,7 +244,7 @@ namespace eval ::alt {
     ## Table Views
     #
 
-    ::xo::dc dml drop_view "drop view alt_document_amountsi cascade"
+    ::xo::dc dml drop_view "drop view if exists alt_document_amountsi cascade"
     ::xo::db::require view alt_document_amountsi "
       select document_id,
              sum(amount) as amount,
