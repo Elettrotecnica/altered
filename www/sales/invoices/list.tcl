@@ -20,11 +20,6 @@ ad_page_contract {
 set page_title "#altered.Sale_Invoices_List#"
 set context [list $page_title]
 
-# Must be an existing acs_object class on the system.
-::alt::Package initialize
-set class "::alt::SaleInvoice"
-
-
 # creates filters form
 ad_form \
     -name filter \
@@ -32,58 +27,60 @@ ad_form \
     -edit_buttons [list [list "Go" go]] \
     -form {
 	{search_invoice_num:text,optional
-	    {label {Cerca N. Fattura}}
+	    {label "#altered.Search_invoice_num#"}
 	    {html {length 20} }
 	    {value $search_invoice_num}
 	}
 	{search_customer_name:text,optional
-	    {label {Cerca ragione sociale }}
+	    {label "#altered.Search_party_name#"}
 	    {html {length 20} }
 	    {value $search_customer_name}
 	}
 	{search_customer_code:text,optional
-	    {label {Cerca codice soggetto }}
+	    {label "#altered.Search_party_code#"}
 	    {html {length 20} }
 	    {value $search_customer_code}
 	}
 	{from_date:date,optional
-	    {label {Da data}}
+	    {label "#altered.From_date#"}
 	    {html {length 20} }
 	    {value $from_date}
 	}
 	{to_date:date,optional
-	    {label {A data}}
+	    {label "#altered.To_date#"}
 	    {html {length 20} }
 	    {value $to_date}
 	}
 	{from_amount:text,optional
-	    {label {Da importo}}
+	    {label "#altered.From_amount#"}
 	    {html {length 20} }
 	    {value $from_amount}
 	}
 	{to_amount:text,optional
-	    {label {A importo}}
+	    {label "#altered.To_amount#"}
 	    {html {length 20} }
 	    {value $to_amount}
 	}
 	{f_is_confirmed_p:text(select),optional
-	    {options {{Tutti ""} {Si t} {No f}}}
-	    {label "Confermata?"}
+	    {options {{[_ acs-kernel.common_All] ""} {[_ acs-kernel.common_Yes] t} {[_ acs-kernel.common_No] f}}}
+	    {label "#altered.Approved__F#?"}
 	    {value $f_is_confirmed_p}
 	}
 	{f_is_paid_p:text(select),optional
-	    {options {{Tutti ""} {Si t} {No f}}}
-	    {label "Pagata?"}
+	    {options {{[_ acs-kernel.common_All] ""} {[_ acs-kernel.common_Yes] t} {[_ acs-kernel.common_No] f}}}
+	    {label "#altered.Paid__F#?"}
 	    {value $f_is_paid_p}
 	}
     } -on_request {
 
 	if {$from_date eq ""} {
-            set from_date [clock format [clock scan "-12 months"] -format %Y-%m-%d]
+            set from_date [clock format [clock scan "-12 months"] -format "%Y %m %d"]
+            set from_date_ansi [clock format [clock scan "-12 months"] -format "%Y-%m-%d"]
         }
 
         if {$to_date eq ""} {
-            set to_date [clock format [clock scan "12 months"] -format %Y-%m-%d]
+            set to_date [clock format [clock scan "12 months"] -format "%Y %m %d"]
+            set to_date_ansi [clock format [clock scan "12 months"] -format "%Y-%m-%d"]
         }
 
     } -on_submit {
@@ -102,6 +99,18 @@ ad_form \
 	    }
 	}
 
+	if {$from_date ne ""} {
+	    set from_date_ansi [template::util::date::get_property ansi $from_date]
+	} else {
+	    set from_date_ansi ""
+	}
+
+	if {$to_date ne ""} {
+	    set to_date_ansi [template::util::date::get_property ansi $to_date]
+	} else {
+	    set to_date_ansi ""
+	}
+
 	if {[template::form is_valid filter]} {
 	    break
 	}
@@ -112,7 +121,7 @@ set actions {
     "#altered.New_Invoice__Short#" edit "#altered.New_Invoice__Long#"
 }
 
-set blulk_actions {}
+set bulk_actions {}
     # set bulk_actions {
     # 	"Stampa senza prezzo"  print-no-prices    "Stampa le fatture selezionate"
     # 	"Stampa con prezzo"    print-with-prices  "Stampa le fatture selezionate con i prezzi"
@@ -168,7 +177,7 @@ template::list::create \
     -multirow invoices \
     -actions $actions \
     -bulk_actions $bulk_actions \
-    -key sale_invoice_id \
+    -key invoice_id \
     -bulk_action_method "post" \
     -page_flush_p t \
     -page_size $rows_per_page \
@@ -186,18 +195,21 @@ template::list::create \
 	    link_url_col lines_url
 	    link_html {title "#altered.Go_to_invoice_lines#"}
 	}
-	invoice_date {
-	    label "#altered.Invoice_Date#"
-	    display_col invoice_date_pretty
+        invoice_year {
+	    label "#altered.Invoice_Year#"
 	}
-	customer_name {
-	    label "#altered.Customer_Name#"
-	    link_url_col customer_url
+	date {
+	    label "#acs-datetime.Date#"
+	    display_col date_pretty
+	}
+	party_name {
+	    label "#altered.Party_Name#"
+	    link_url_col party_url
 	    link_html {title "#altered.Go_to_party#"}
 	}
-	invoice_amount {
-	    display_col invoice_amount_pretty
-	    label "#altered.Invoice_Amount#"
+	amount {
+	    display_col amount_pretty
+	    label "#altered.Amount#"
 	    html {align right}
 	    aggregate "sum"
 	}
@@ -207,8 +219,8 @@ template::list::create \
 	    html {align right}
 	    aggregate "sum"
 	}
-	is_confirmed_p {
-	    label "#altered.Approved#"
+	confirmed_p {
+	    label "#altered.Approved__F#"
 	    link_url_col approve_reset_url
 	    link_html {title "#altered.Confirm/Reset#"}
 	    html {align center}
@@ -225,67 +237,67 @@ template::list::create \
 	}
     } \
     -orderby {
-        default_value "invoice_date,desc"
-        invoice_date {
-	    label "#altered.Invoice_Date#"
-	    orderby_asc "i.date asc, i.code asc"
-	    orderby_desc "i.date desc, i.code desc"
+        default_value "date,desc"
+        date {
+	    label "#acs-datetime.Date#"
+	    orderby_asc "date asc, invoice_num asc"
+	    orderby_desc "date desc, invoice_num desc"
 	}
         invoice_num {
 	    label "#altered.Invoice_Num#"
-	    orderby_asc "i.code asc"
-	    orderby_desc "i.code desc"
+	    orderby_asc "invoice_num asc"
+	    orderby_desc "invoice_num desc"
 	}
         customer_name {
-	    label "#altered.Customer_Name#"
-	    orderby_asc "c.title asc, i.date asc, i.code asc"
-	    orderby_asc "c.title desc, i.date desc, i.code desc"
+	    label "#altered.Party_Name#"
+	    orderby_asc "party_name asc, date asc, invoice_num asc"
+	    orderby_asc "party_name desc, date desc, invoice_num desc"
 	}
     } \
     -filters {
 	search_invoice_num {
 	    hide_p 1
-            where_clause {(:search_invoice_num is null or upper(i.code) like '%' || upper(:search_invoice_num) || '%')}
+            where_clause {(:search_invoice_num is null or upper(invoice_num) like '%' || upper(:search_invoice_num) || '%')}
 	}
 	search_invoice_id {
 	    hide_p 1
-            where_clause {(:search_invoice_id is null or i.document_id = :search_invoice_id)}
+            where_clause {(:search_invoice_id is null or invoice_id = :search_invoice_id)}
 	}
 	search_customer_name {
 	    hide_p 1
-            where_clause {(:search_customer_name is null or upper(c.title) like '%' || upper(:search_customer_name) || '%')}	    
+            where_clause {(:search_customer_name is null or upper(party_name) like '%' || upper(:search_customer_name) || '%')}
 	}
 	search_customer_code {
 	    hide_p 1
-            where_clause {(:search_customer_code is null or upper(c.code) like '%' || upper(:search_customer_code) || '%')}	    	    
+            where_clause {(:search_customer_code is null or upper(party_code) like '%' || upper(:search_customer_code) || '%')}
 	}
         from_date {
             hide_p 1
-            where_clause {(:from_date is null or i.invoice_date >= :from_date)}
+            where_clause {(:from_date_ansi is null or date >= :from_date_ansi)}
         }
         to_date {
             hide_p 1
-            where_clause {(:to_date is null or i.invoice_date <= :to_date)}	    
+            where_clause {(:to_date_ansi is null or date <= :to_date_ansi)}
         }
 	from_amount {
 	    hide_p 1
-	    where_clause {(:from_amount is null or i.invoice_amount >= :from_amount)}
+	    where_clause {(:from_amount is null or amount >= :from_amount)}
 	}
 	to_amount {
 	    hide_p 1
-	    where_clause {(:to_amount is null or i.invoice_amount <= :to_amount)}
+	    where_clause {(:to_amount is null or amount <= :to_amount)}
 	}
         f_is_confirmed_p {
             hide_p 1
-	    where_clause {(:f_is_confirmed_p is not null or i.confirmed_p = :f_is_confirmed_p)}
+	    where_clause {(:f_is_confirmed_p is null or confirmed_p = :f_is_confirmed_p)}
         }
         f_is_paid_p {
             hide_p 1
-	    where_clause {(:f_is_paid_p is not null or (i.amount = i.paid_amount) = :f_is_paid_p)}
+	    where_clause {(:f_is_paid_p is null or (amount = paid_amount) = :f_is_paid_p)}
         }
         rows_per_page {
-	    label "Righe per pagina"
-  	    values {{10 10} {30 30} {100 100} {Tutte 9999999}}
+	    label "#altered.Rows_per_page#"
+  	    values {{10 10} {30 30} {100 100} {"#acs-kernel.common_All#" 9999999}}
 	    where_clause {1 = 1}
             default_value 30
         }
@@ -297,42 +309,35 @@ if {![info exists errnum]} {
     set extend_cols {
 	edit_url
 	lines_url
-	customer_url
+	party_url
 	approve_reset_url
 	delete_url
 	paid_amount_pretty
-	invoice_amount_pretty
+	amount_pretty
+	date_pretty
+	is_paid_p
     }
 
-    db_multirow -extend $extend_cols invoices query "
-	select i.*,
-               c.code as customer_code,
-               c.title as customer_name
-        from alt_sale_invoicesi i,
-	     alt_parties c
-        where c.party_id = i.party_id
-        [template::list::page_where_clause -name invoices -key i.document_id -and]
-        [template::list::orderby_clause -name invoices -orderby]
-    " {
-	set is_paid_p [expr {$amount == $paid_amount ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
+    db_multirow -extend $extend_cols invoices multirow_query {} {
+	set is_paid_p [expr {$amount != 0 && $amount == $paid_amount ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
 
-	set edit_url     [export_vars -base "edit" {document_id}]
-	set lines_url    [export_vars -base "lines" {document_id}]
-	set delete_url   [export_vars -base "delete" {document_id}]
-	set customer_url [export_vars -base "[ad_conn package_key]/parties/edit" {party_id}]
+	set edit_url   [export_vars -base "edit" {{item_id $invoice_id}}]
+	set lines_url  [export_vars -base "lines" {invoice_id}]
+	set party_url  [export_vars -base "../../parties/edit" {{item_id $party_id}}]
 
 	if {$confirmed_p} {
-	    set approve_reset_url [export_vars -base "reset" {document_id}]
+	    set approve_reset_url [export_vars -base "../../call" {{m reset} {item_id $invoice_id}}]
 	} else {
-	    set approve_reset_url [export_vars -base "approve" {document_id}]
+	    set approve_reset_url [export_vars -base "../../call" {{m confirm} {item_id $invoice_id}}]
 	}
 
-	set delete_url [export_vars -base "[ad_conn package_key]/delete" {{item_id $document_id}}]
+	set delete_url [export_vars -base "../../call" {{m delete} {item_id $invoice_id}}]
 
+	set date_pretty [lc_time_fmt $date %x]
 	set amount_pretty      [lc_numeric $amount]
-	set paid_amount_pretty [lc_numeric $paid_amount]	
+	set paid_amount_pretty [lc_numeric $paid_amount]
 
-	set is_confirmed_p [expr {$is_confirmed_p ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
+	set confirmed_p [expr {$confirmed_p ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
     }
 
     # save current url vars for future reuse

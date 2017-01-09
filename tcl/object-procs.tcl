@@ -33,7 +33,7 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create city
 	    ::xo::db::Attribute create zone
 	    ::xo::db::Attribute create region
-	    ::xo::db::Attribute create country
+	    ::xo::db::Attribute create country -references "countries(iso)"
 	}
 
     #
@@ -51,13 +51,49 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create vat_number -unique true
 	}
 
+    ::xo::db::require sequence \
+	-name alt_parties_party_code_seq \
+	-start_with 1 -increment_by 1
+
     Party instproc get_main_location {} {
 	return [::xo::dc get_value get "
          select location_id from alt_party_locations
           where party_id = ${:party_id}
-            and main_p" -default ""]
+            and main_p" ""]
     }
 
+    Party instproc gen_code {} {
+	if {${:code} eq ""} {
+	    set :code [format "%06s" [::xo::dc get_value nextval "
+              select nextval('alt_parties_party_code_seq')"]]
+	}
+    }
+
+    Party instproc delete {} {
+	set locations [::xo::dc list get_locations "
+          select location_id from alt_party_locations 
+           where party_id = ${:party_id}"]
+	::xo::dc dml delete_locations "
+         delete from alt_party_locations 
+          where party_id = ${:party_id}"
+	foreach location_id $locations {
+	    set l [::xo::db::Class get_instance_from_db \
+		       -id $location_id]
+	    $l delete
+	}
+	next
+    }
+
+    Party instproc save_new {} {
+	:gen_code
+	next
+    }
+
+    Party instproc save {} {
+	:gen_code
+	next
+    }
+    
 
     # Party locations
 
@@ -119,53 +155,6 @@ namespace eval ::alt {
     }
 
     #
-    ## Document
-    #
-
-    ::xo::db::Class create Document \
-	-table_name "alt_documents" \
-	-pretty_name   "#altered.Document#" \
-	-pretty_plural "#altered.Documents#" \
-	-superclass ::xo::db::Object -slots {
-	    ::xo::db::Attribute create code -not_null true
-	    ::xo::db::Attribute create year -datatype integer -not_null true
-	    ::xo::db::Attribute create date -datatype date
-	    ::xo::db::Attribute create party_id -datatype integer -references "[::alt::Party table_name]([alt::Party id_column])"
-	    ::xo::db::Attribute create location_id -datatype integer -references "[::alt::Location table_name]([alt::Location id_column])"
-	    ::xo::db::Attribute create description
-	    ::xo::db::Attribute create confirmed_p -datatype boolean -default false
-	}
-
-    ::xo::db::require index -table [::alt::Document table_name] -unique true -col "code,year"
-
-    foreach col {party_id location_id} {
-	::xo::db::require index -table [::alt::Document table_name] -col $col
-    }
-
-    #
-    ## Document detail
-    #
-
-    ::xo::db::Class create DocumentDetail \
-	-id_column "document_detail_id" \
-	-table_name "alt_document_details" \
-	-pretty_name   "#altered.Document_detail#" \
-	-pretty_plural "#altered.Documents_details#" \
-	-superclass ::xo::db::Object -slots {
-	    ::xo::db::Attribute create document_id \
-		-datatype integer -references "[::alt::Document table_name]([alt::Document id_column])" -not_null true
-	    ::xo::db::Attribute create product_id \
-		-datatype integer -references "[::alt::Product table_name]([alt::Product id_column])"
-	    ::xo::db::Attribute create description
-	    ::xo::db::Attribute create qty -datatype number
-	    ::xo::db::Attribute create price -datatype number
-	}
-
-    foreach col {document_id product_id} {
-	::xo::db::require index -table [::alt::DocumentDetail table_name] -col $col
-    }
-
-    #
     ## Purchase invoice
     #
 
@@ -174,7 +163,44 @@ namespace eval ::alt {
 	-table_name "alt_purchase_invoices" \
 	-pretty_name   "#altered.PurchaseInvoice#" \
 	-pretty_plural "#altered.PurchaseInvoices#" \
-	-superclass ::alt::Document
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create invoice_num -not_null true
+	    ::xo::db::Attribute create invoice_year -datatype integer -not_null true	    
+	    ::xo::db::Attribute create date -datatype date
+	    ::xo::db::Attribute create party_id -datatype integer -references "[::alt::Party table_name]([alt::Party id_column])"
+	    ::xo::db::Attribute create location_id -datatype integer -references "[::alt::Location table_name]([alt::Location id_column])"
+	    ::xo::db::Attribute create description
+	    ::xo::db::Attribute create confirmed_p -datatype boolean -default false	    
+	}
+
+    foreach col {party_id location_id} {
+	::xo::db::require index -table [::alt::PurchaseInvoice table_name] -col $col
+    }
+
+    ::xo::db::require index -table [::alt::PurchaseInvoice table_name] -unique true -col "invoice_num,invoice_year"
+
+    PurchaseInvoice instproc confirm {} {
+	if {${:confirmed_p}} return
+	set amount [::xo::dc get_value get_amount "
+         select sum(price * qty) from [::alt::PurchaseInvoiceLine table_name]
+          where invoice_id = ${:invoice_id}"]
+	set d [PaymentDate new -volatile \
+		   -document_id ${:invoice_id} \
+		   -amount      $amount \
+		   -due_date    ${:date}]
+	$d save_new
+	set :confirmed_p true
+    }
+
+    PurchaseInvoice instproc reset {} {
+	if {!${:confirmed_p}} return
+	foreach date_id [::xo::dc list get_dates "
+           select date_id from [::altered::PayDates table_name]
+            where document_id = ${:invoice_id}"] {	    
+	    ::xo::db::Class delete -id $item_id
+	}
+	set :confirmed_p false
+    }    
 
     #
     ## Purchase invoice line
@@ -185,7 +211,19 @@ namespace eval ::alt {
     	-table_name "alt_purchase_invoice_lines" \
 	-pretty_name   "#altered.PurchaseInvoiceLine#" \
 	-pretty_plural "#altered.PurchaseInvoiceLines#" \
-	-superclass ::alt::DocumentDetail
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create invoice_id \
+		-datatype integer -references "[::alt::PurchaseInvoice table_name]([alt::PurchaseInvoice id_column])" -not_null true
+	    ::xo::db::Attribute create product_id \
+		-datatype integer -references "[::alt::Product table_name]([alt::Product id_column])"
+	    ::xo::db::Attribute create description
+	    ::xo::db::Attribute create qty -datatype number
+	    ::xo::db::Attribute create price -datatype number
+	}
+
+    foreach col {invoice_id product_id} {
+	::xo::db::require index -table [::alt::PurchaseInvoiceLine table_name] -col $col
+    }
 
     #
     ## Sale invoice
@@ -196,7 +234,45 @@ namespace eval ::alt {
 	-table_name "alt_sale_invoices" \
 	-pretty_name   "#altered.SaleInvoice#" \
 	-pretty_plural "#altered.SaleInvoices#" \
-	-superclass ::alt::Document
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create invoice_num -not_null true
+	    ::xo::db::Attribute create invoice_year -datatype integer -not_null true	    
+	    ::xo::db::Attribute create date -datatype date
+	    ::xo::db::Attribute create party_id -datatype integer -references "[::alt::Party table_name]([alt::Party id_column])"
+	    ::xo::db::Attribute create location_id -datatype integer -references "[::alt::Location table_name]([alt::Location id_column])"
+	    ::xo::db::Attribute create description
+	    ::xo::db::Attribute create confirmed_p -datatype boolean -default false	    
+	}
+
+    foreach col {party_id location_id} {
+	::xo::db::require index -table [::alt::SaleInvoice table_name] -col $col
+    }
+
+    ::xo::db::require index -table [::alt::SaleInvoice table_name] -unique true -col "invoice_num,invoice_year"
+
+    SaleInvoice instproc confirm {} {
+	if {${:confirmed_p}} return
+	set amount [::xo::dc get_value get_amount "
+         select sum(price * qty) from [::alt::SaleInvoiceLine table_name]
+          where invoice_id = ${:invoice_id}"]
+	set d [PaymentDate new -volatile \
+		   -document_id ${:invoice_id} \
+		   -amount      $amount \
+		   -due_date    ${:date}]
+	$d save_new
+	set :confirmed_p true
+    }
+
+    SaleInvoice instproc reset {} {
+	if {!${:confirmed_p}} return
+	foreach date_id [::xo::dc list get_dates "
+           select date_id from [::altered::PayDates table_name]
+            where document_id = ${:invoice_id}"] {	    
+	    ::xo::db::Class delete -id $item_id
+	}
+	set :confirmed_p false
+    }
+    
 
     #
     ## Sale invoice line
@@ -207,7 +283,19 @@ namespace eval ::alt {
     	-table_name "alt_sale_invoice_lines" \
 	-pretty_name   "#altered.SaleInvoiceLine#" \
 	-pretty_plural "#altered.SaleInvoiceLines#" \
-	-superclass ::alt::DocumentDetail
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create invoice_id \
+		-datatype integer -references "[::alt::SaleInvoice table_name]([alt::SaleInvoice id_column])" -not_null true
+	    ::xo::db::Attribute create product_id \
+		-datatype integer -references "[::alt::Product table_name]([alt::Product id_column])"
+	    ::xo::db::Attribute create description
+	    ::xo::db::Attribute create qty -datatype number
+	    ::xo::db::Attribute create price -datatype number
+	}
+
+    foreach col {invoice_id product_id} {
+	::xo::db::require index -table [::alt::SaleInvoiceLine table_name] -col $col
+    }
 
     #
     ## Payment dates
@@ -219,10 +307,10 @@ namespace eval ::alt {
 	-pretty_name   "#altered.PayDate#" \
 	-pretty_plural "#altered.Paydates#" \
 	-superclass ::xo::db::Object -slots {
-	    ::xo::db::Attribute create document_id -datatype integer -references [alt::Document table_name]([alt::Document id_column])
+	    ::xo::db::Attribute create document_id -datatype integer -references "acs_objects(object_id)"
 	    ::xo::db::Attribute create due_date -datatype date
 	    ::xo::db::Attribute create closing_date -datatype date
-	    ::xo::db::Attribute create amount -datatype number
+	    ::xo::db::Attribute create amount -datatype number -not_null true -default 0
 	}
 
     ::xo::db::require index -table [::alt::PaymentDate table_name] -col document_id
@@ -235,7 +323,7 @@ namespace eval ::alt {
 	-superclass ::xo::db::Object -slots {
 	    ::xo::db::Attribute create date_id -datatype integer -references [alt::PaymentDate table_name]([alt::PaymentDate id_column])
 	    ::xo::db::Attribute create date -datatype date
-	    ::xo::db::Attribute create amount -datatype number
+	    ::xo::db::Attribute create amount -datatype number -not_null true -default 0
 	}
 
     ::xo::db::require index -table [::alt::Payment table_name] -col date_id
@@ -254,35 +342,47 @@ namespace eval ::alt {
          group by document_id"
     
     ::xo::db::require view alt_purchase_invoicesi "
-          select d.*, i.*, am.amount, am.paid_amount
-          from [::alt::Document        table_name] d,
-               [::alt::PurchaseInvoice table_name] i,
-               alt_document_amountsi am
-            where d.[alt::Document id_column] = i.[alt::PurchaseInvoice id_column]
-              and d.[alt::Document id_column] = am.document_id" \
+          select i.*,
+                 p.code as party_code,
+                 p.title as party_name, 
+                 coalesce(am.amount, 0) as amount,
+                 coalesce(am.paid_amount, 0) as paid_amount
+          from [::alt::PurchaseInvoice table_name] i
+               left join alt_document_amountsi am on i.[alt::PurchaseInvoice id_column] = am.document_id,
+               [::alt::Party table_name] p
+            where i.party_id = p.[::alt::Party id_column]" \
 	-rebuild_p true
 
     ::xo::db::require view alt_purchase_invoice_linesi "
-          select dl.*, l.*
-          from [::alt::DocumentDetail      table_name] dl,
-               [::alt::PurchaseInvoiceLine table_name] l
-            where dl.[alt::DocumentDetail id_column] = l.[alt::PurchaseInvoiceLine id_column]" \
+          select l.*,
+                 p.code as product_code,
+                 p.name as product_name,
+                 p.description as product_description
+          from [::alt::PurchaseInvoiceLine table_name] l,
+               [::alt::Product table_name] p
+            where l.product_id = p.[alt::Product id_column]" \
 	-rebuild_p true
 
     ::xo::db::require view alt_sale_invoicesi "
-          select d.*, i.*, am.amount, am.paid_amount
-          from [::alt::Document    table_name] d,
-               [::alt::SaleInvoice table_name] i,
-               alt_document_amountsi am
-            where d.[alt::Document id_column] = i.[alt::SaleInvoice id_column]
-              and d.[alt::Document id_column] = am.document_id" \
+          select i.*,
+                 p.code as party_code,
+                 p.title as party_name, 
+                 coalesce(am.amount, 0) as amount,
+                 coalesce(am.paid_amount, 0) as paid_amount
+          from [::alt::SaleInvoice table_name] i
+               left join alt_document_amountsi am on i.[alt::SaleInvoice id_column] = am.document_id,
+               [::alt::Party table_name] p
+            where i.party_id = p.[::alt::Party id_column]" \
 	-rebuild_p true
 
     ::xo::db::require view alt_sale_invoice_linesi "
-          select dl.*, l.*
-          from [::alt::DocumentDetail  table_name] dl,
-               [::alt::SaleInvoiceLine table_name] l
-            where dl.[alt::DocumentDetail id_column] = l.[alt::SaleInvoiceLine id_column]" \
+          select l.*,
+                 p.code as product_code,
+                 p.name as product_name,
+                 p.description as product_description
+          from [::alt::SaleInvoiceLine table_name] l,
+               [::alt::Product table_name] p
+            where l.product_id = p.[alt::Product id_column]" \
 	-rebuild_p true
 
 }

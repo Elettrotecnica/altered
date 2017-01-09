@@ -17,7 +17,7 @@ set class "::alt::Product"
     -class $class \
     -package_id $package_id  \
     -rows_per_page $rows_per_page \
-    -delete_url "../delete" \
+    -delete_url "../call?m=delete" \
     -edit_url "edit" \
     -create_url "edit" \
     -elements {
