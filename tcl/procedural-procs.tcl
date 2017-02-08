@@ -20,7 +20,7 @@ ad_proc -public alt::um::selbox {
     foreach um [[::alt::Unity get_instances_from_db \
 		     -select_attributes {code,name,unity_id}] children] {
 	set code [$um set code]
-	set name [_ [$um set name]]
+	set name [_ [string range [$um set name] 1 end-1]]
 	lappend selbox [list "$code - $name" [$um set unity_id]]
     }
     return $selbox
