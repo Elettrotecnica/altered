@@ -12,17 +12,17 @@ template::head::add_javascript -src "/resources/$package_key/javascript/ah-util.
 
 # Must be an existing acs_object class on the system.
 ::alt::Package initialize
-set class "::alt::SaleInvoice"
+set class "::alt::PurchaseInvoice"
 
 if {[info exists item_id] && [::xo::db::Class exists_in_db -id $item_id]} {
-    set page_title #altered.Edit_Sale_Invoice#
+    set page_title #altered.Edit_Purchase_Invoice#
     set data [::xo::db::Class get_instance_from_db -id $item_id]
 } else {
-    set page_title #altered.Create_Sale_Invoice#
+    set page_title #altered.Create_Purchase_Invoice#
     set data [$class new]
 }
 
-set context [list [list list #altered.Sale_Invoices_List#] $page_title]
+set context [list [list list #altered.Purchase_Invoices_List#] $page_title]
 
 set form_id addedit
 

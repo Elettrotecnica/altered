@@ -30,6 +30,12 @@ set class "::alt::Product"
 	description {
 	    label "#altered.Description#"
 	}
+	um {
+	    label "#altered.Unity_of_Measurement#"
+	}
+	price {
+	    label "#altered.Price#"
+	}	
     } -orderby {
 	default_value name
 	name {
@@ -37,7 +43,12 @@ set class "::alt::Product"
 	    orderby_desc "name desc"
 	    orderby_asc "name asc"
 	}
-    } -row_code {
+    } -row_code {	
+	if {$unity_id ne ""} {	    
+	    set um [::xo::dc get_value get_um "
+		select code from [::alt::Unity table_name]
+		where unity_id = :unity_id"]
+	}
     }
 
 list1 generate

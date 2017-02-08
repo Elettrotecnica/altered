@@ -20,9 +20,8 @@ ad_page_contract {
 set page_title "#altered.Purchase_Invoices_List#"
 set context [list $page_title]
 
-set package_url [subsite::get_url]/[ad_conn package_key]
-
 # creates filters form
+set validated_p t
 ad_form \
     -name filter \
     -export {rows_per_page} \
@@ -79,9 +78,13 @@ ad_form \
             set from_date [clock format [clock scan "-12 months"] -format "%Y %m %d"]
         }
 
+	set from_date_ansi [template::util::date::get_property ansi $from_date]
+
         if {$to_date eq ""} {
             set to_date [clock format [clock scan "12 months"] -format "%Y %m %d"]
         }
+
+	set to_date_ansi [template::util::date::get_property ansi $to_date]
 
     } -on_submit {
 
@@ -111,7 +114,8 @@ ad_form \
 	    set to_date_ansi ""
 	}
 
-	if {[template::form is_valid filter]} {
+	set validated_p [template::form is_valid filter]
+	if {!$validated_p} {
 	    break
 	}
     }
@@ -122,55 +126,15 @@ set actions {
 }
 
 set bulk_actions {}
-    # set bulk_actions {
-    # 	"Stampa senza prezzo"  print-no-prices    "Stampa le fatture selezionate"
-    # 	"Stampa con prezzo"    print-with-prices  "Stampa le fatture selezionate con i prezzi"
-    # 	"Stampa e invio email" print-with-mail    "Stampa le fatture selezionate con i prezzi e invia una copia al cliente"
-    # 	"Stampa per consegna"  print-to-deliver  "Stampa le DDT selezionate in doppia copia e ordinate in base al percorso"
-    # 	"Conferma"             approve            "Conferma le fatture selezionate"
-    # 	"Cedi credito"         factor             "Cedi il credito delle fatture selezionate"
-    # 	"Modif. Agente"        sale-rep-change    "Modifica Agente sulle fatture selezionate"
-    # }
 
 set line_actions {}
 
-if {[template::form is_valid filter]} {
+if {$validated_p} {
     set page_query_name paginator
 } else {
     set page_query_name dummy_paginator
     template::multirow create invoices dummy
 }
-
-	# attach {
-	#     link_url_col attach_url
-	#     display_template {<img src="/resources/mis-base/att_new.gif" width="16" height="16" class="@invoices.attach_class@">}
-	#     link_html {title "Gestisci allegati"}
-	#     sub_class narrow
-	# }
-	# print {
-	#     link_url_col print_url
-	#     display_template {<img src="/resources/mis-base/printer.gif" border="0">}
-	#     link_html {title "Stampa fattura senza prezzo"}
-	#     sub_class narrow
-	# }
-	# print_with_prices {
-	#     link_url_col print_with_prices_url
-	#     display_template {<img src="/resources/mis-base/printer_prices.gif" border="0">}
-	#     link_html {title "Stampa fattura con prezzo"}
-	#     sub_class narrow
-        # }
-	# print_with_mail {
-	#     link_url_col print_with_mail_url
-	#     display_template {<img src="/resources/mis-base/printer_mail.gif" border="0">}
-	#     link_html {title "Stampa fattura con prezzo e invia al cliente"}
-	#     sub_class narrow
-	# }
-	# actions {
-	#     label "Azioni"
-	#     display_template $line_actions
-	# }
-
-
 
 template::list::create \
     -name invoices \
@@ -197,7 +161,7 @@ template::list::create \
 	}
 	date {
 	    label "#acs-datetime.Date#"
-	    display_col invoice_date_pretty
+	    display_col date_pretty
 	}
 	party_name {
 	    label "#altered.Party_Name#"
@@ -205,21 +169,22 @@ template::list::create \
 	    link_html {title "#altered.Go_to_party#"}
 	}
 	amount {
-	    display_col invoice_amount_pretty
+	    display_col amount_pretty
 	    label "#altered.Amount#"
 	    html {align right}
 	    aggregate "sum"
 	}
 	paid_amount {
 	    display_col paid_amount_pretty
+	    link_url_col payments_url
 	    label "#altered.Paid_Amount#"
 	    html {align right}
 	    aggregate "sum"
 	}
-	is_confirmed_p {
+	confirmed_p {
 	    label "#altered.Approved__F#"
 	    link_url_col approve_reset_url
-	    link_html {title "#altered.Confirm/Reset#"}
+	    link_html {title "[_ altered.Confirm-Reset]"}
 	    html {align center}
 	}
 	is_paid_p {
@@ -228,7 +193,7 @@ template::list::create \
 	}
 	delete {
 	    link_url_col delete_url
-	    link_html {title "#altered.Delete_this_invoice#" class "confirm" data-msg "#altered.Confirm_delete?#"}
+	    link_html {title "#altered.Delete_this_invoice#" class "confirm"}
 	    display_template {<img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0">}
 	    sub_class narrow
 	}
@@ -286,11 +251,11 @@ template::list::create \
 	}
         f_is_confirmed_p {
             hide_p 1
-	    where_clause {(:f_is_confirmed_p is not null or confirmed_p = :f_is_confirmed_p)}
+	    where_clause {(:f_is_confirmed_p is null or confirmed_p = :f_is_confirmed_p)}
         }
         f_is_paid_p {
             hide_p 1
-	    where_clause {(:f_is_paid_p is not null or (amount = paid_amount) = :f_is_paid_p)}
+	    where_clause {(:f_is_paid_p is null or (amount = paid_amount) = :f_is_paid_p)}
         }
         rows_per_page {
 	    label "#altered.Rows_per_page#"
@@ -301,8 +266,7 @@ template::list::create \
     }
 
 
-# eseguo la query solo in assenza di errori nei filtri del form
-if {![info exists errnum]} {
+if {$validated_p} {
     set extend_cols {
 	edit_url
 	lines_url
@@ -310,28 +274,37 @@ if {![info exists errnum]} {
 	approve_reset_url
 	delete_url
 	paid_amount_pretty
-	invoice_amount_pretty
+	payments_url
+	amount_pretty
+	date_pretty
+	is_paid_p
     }
 
-    db_multirow -extend $extend_cols invoices multirow_query {} {
-	set is_paid_p [expr {$amount == $paid_amount ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
+    set this_url [export_vars -base [ad_conn url] -entire_form -no_empty]
+    set package_url [ad_conn package_url]
 
-	set edit_url   [export_vars -base "edit" {invoice_id}]
+    db_multirow -extend $extend_cols invoices multirow_query {} {
+	set is_paid_p [expr {$amount != 0 && $amount == $paid_amount ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
+
+	set edit_url   [export_vars -base "edit" {{item_id $invoice_id}}]
 	set lines_url  [export_vars -base "lines" {invoice_id}]
-	set party_url  [export_vars -base "$package_url/parties/edit" {party_id}]
+	set party_url  [export_vars -base "${package_url}parties/edit" {{item_id $party_id}}]
 
 	if {$confirmed_p} {
-	    set approve_reset_url [export_vars -base "$package_url/call" {{m reset} {item_id $invoice_id}}]
+	    set approve_reset_url [export_vars -base "${package_url}call" {{m reset} {item_id $invoice_id} {return_url $this_url}}]
 	} else {
-	    set approve_reset_url [export_vars -base "$package_url/call" {{m confirm} {item_id $invoice_id}}]
+	    set approve_reset_url [export_vars -base "${package_url}call" {{m confirm} {item_id $invoice_id} {return_url $this_url}}]
 	}
 
-	set delete_url [export_vars -base "$package_url/call" {{m delete} {item_id $invoice_id}}]
+	set delete_url [export_vars -base "${package_url}call" {{m delete} {item_id $invoice_id} {return_url $this_url}}]
 
+	set payments_url [export_vars -base "${package_url}payment-dates/list" {{document_id $invoice_id} {return_url $this_url}}]
+
+	set date_pretty [lc_time_fmt $date %x]
 	set amount_pretty      [lc_numeric $amount]
 	set paid_amount_pretty [lc_numeric $paid_amount]
 
-	set is_confirmed_p [expr {$is_confirmed_p ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
+	set confirmed_p [expr {$confirmed_p ? [_ acs-kernel.common_Yes] : [_ acs-kernel.common_No]}]
     }
 
     # save current url vars for future reuse
@@ -339,9 +312,13 @@ if {![info exists errnum]} {
 
 } else {
 
-    # In caso di errore azzero le variabili di sessione salvate.
+    # erase session variables on errors
     ad_set_client_property [ad_conn package_key] [ad_conn url] ""
 
-    # creo una multirow fittizia
+    # create a fake multirow
     template::multirow create invoices dummy
 }
+
+template::add_confirm_handler \
+    -message [_ altered.Are_you_sure_you_want_to_delete?] \
+    -CSSclass confirm

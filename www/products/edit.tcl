@@ -18,9 +18,10 @@ if {[info exists item_id] && [::xo::db::Class exists_in_db -id $item_id]} {
 
 set context [list [list list #altered.Products_List#] $page_title]
 
-ad_form -name addedit \
+set form_name addedit
+ad_form -name $form_name \
+    -export {item_id} \
     -form {
-	{item_id:key}
 	{code:text,optional
 	    {label #altered.Code#}
 	    {html {readonly ""}}
@@ -28,28 +29,42 @@ ad_form -name addedit \
 	{name:text
 	    {label #altered.Name#}
 	}
-	{description:text
-	    {label #altered.Description#}
+	{description:text(textarea),optional,nospell
+	    {label "#altered.Description#"}
+	    {html {rows 3 cols 50 wrap soft}}
 	}
-    } -edit_request {
-	foreach field {code name description} {
-	    set $field [$data set $field]
+	{price:text,optional
+	    {label #altered.Price#}
+	}
+	{unity_id:text(select),optional
+	    {options {{"..." ""} [alt::um::selbox]}}
+	    {label "#altered.Unit_of_Measurement#"}
+	}
+    } -on_request {
+	if {[$data exists object_id]} {
+	    foreach var {code name description price unity_id} {
+		template::element::set_value $form_name $var [$data set $var]
+	    }
 	}
     } -on_submit {
+	set object_id [expr {[$data exists object_id] ? [$data set object_id] : ""}]
 	if {[::xo::dc 0or1row check "
            select 1 from [$class table_name]
             where code = :code 
-              and product_id <> :item_id"]} {
-	    template::form::set_error addedit code #altered.Code_is_not_unique#
+              and product_id <> :object_id"]} {
+	    template::form::set_error $form_name code #altered.Code_is_not_unique#
 	    break
 	}
-	foreach field {code name description} {
+	foreach field {code name description price unity_id} {
 	    $data set $field [set $field]
 	}
-    } -new_data {
-	$data save_new
-    } -edit_data {
-	$data save
+
+	if {![$data exists object_id]} { 
+	    ::xo::dc transaction { $data save_new }
+	} else {
+	    ::xo::dc transaction { $data save }
+	}
+	
     } -after_submit {
 	ad_returnredirect list
 	ad_script_abort
