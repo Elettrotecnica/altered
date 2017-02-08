@@ -31,7 +31,7 @@ set class "::alt::Product"
 	    label "#altered.Description#"
 	}
 	um {
-	    label "#altered.Unity_of_Measurement#"
+	    label "#altered.Unit_of_Measurement#"
 	}
 	price {
 	    label "#altered.Price#"
