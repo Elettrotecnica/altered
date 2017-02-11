@@ -1,22 +1,22 @@
 ad_page_contract {
-    Product add/edit
+    VAT add/edit
 } {
     item_id:naturalnum,optional
 }
 
 # Must be an existing acs_object class on the system.
 ::alt::Package initialize
-set class "::alt::Product"
+set class "::alt::VAT"
 
 if {[info exists item_id] && [::xo::db::Class exists_in_db -id $item_id]} {
-    set page_title #altered.Edit_Product#
+    set page_title #altered.Edit_VAT#
     set data [::xo::db::Class get_instance_from_db -id $item_id]    
 } else {
-    set page_title #altered.Create_Product#
+    set page_title #altered.Create_VAT#
     set data [$class new]    
 }
 
-set context [list [list list #altered.Products_List#] $page_title]
+set context [list [list list #altered.VATs_List#] $page_title]
 
 set form_name addedit
 ad_form -name $form_name \
@@ -24,29 +24,20 @@ ad_form -name $form_name \
     -form {
 	{code:text,optional
 	    {label #altered.Code#}
-	    {html {readonly ""}}
 	}
 	{name:text
 	    {label #altered.Name#}
 	}
-	{description:text(textarea),optional,nospell
-	    {label "#altered.Description#"}
-	    {html {rows 3 cols 50 wrap soft}}
+	{rate:text,optional
+	    {label #altered.Rate#}
 	}
-	{price:text,optional
-	    {label #altered.Price#}
-	}
-	{unity_id:text(select),optional
-	    {options {{"..." ""} [alt::um::selbox]}}
-	    {label "#altered.Unit_of_Measurement#"}
-	}
-	{vat_id:text(select),optional
-	    {options {{"..." ""} [alt::vat::selbox]}}
-	    {label "#altered.VAT#"}
+	{undeductible_rate:text,optional
+	    {label #altered.Undeductible_Rate#}
+	    {value 0}
 	}
     } -on_request {
 	if {[$data exists object_id]} {
-	    foreach var {code name description price unity_id vat_id} {
+	    foreach var {code name rate undeductible_rate} {
 		template::element::set_value $form_name $var [$data set $var]
 	    }
 	}
@@ -59,7 +50,7 @@ ad_form -name $form_name \
 	    template::form::set_error $form_name code #altered.Code_is_not_unique#
 	    break
 	}
-	foreach field {code name description price unity_id vat_id} {
+	foreach field {code name rate undeductible_rate} {
 	    $data set $field [set $field]
 	}
 

@@ -9,19 +9,50 @@ ad_library {
 namespace eval alt {}
 namespace eval alt::um {}
 
+ad_proc -public alt::selbox {
+    -class:required
+} {
+
+    Returns a list in ad_form select widget format for all instances
+    defined for the kind of object specified
+
+} {
+    set id_column [$class id_column]
+    set selbox {}
+    foreach o [[$class get_instances_from_db \
+		     -select_attributes [subst {code,name,$id_column}]] children] {
+	set code [$o set code]
+	set name [$o set name]
+	if {[string match "#*#" $name]} {
+	    set name [_ [string range $name 1 end-1]]
+	}
+	lappend selbox [list "$code - $name" [$o set $id_column]]
+    }
+    return [lsort -index 0 $selbox]
+}
+
+namespace eval alt {}
+namespace eval alt::um {}
+
 ad_proc -public alt::um::selbox {
 } {
-    
+
     Returns a list in ad_form select widget format for the unity of
     measure defined on the system
-    
+
 } {
-    set selbox {}
-    foreach um [[::alt::Unity get_instances_from_db \
-		     -select_attributes {code,name,unity_id}] children] {
-	set code [$um set code]
-	set name [_ [string range [$um set name] 1 end-1]]
-	lappend selbox [list "$code - $name" [$um set unity_id]]
-    }
-    return $selbox
+    return [ns_memoize [::alt::selbox -class ::alt::Unity]]
+}
+
+namespace eval alt {}
+namespace eval alt::vat {}
+
+ad_proc -public alt::vat::selbox {
+} {
+
+    Returns a list in ad_form select widget format for the VATs
+    defined on the system
+
+} {
+    return [::alt::selbox -class ::alt::VAT]
 }

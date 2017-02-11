@@ -109,6 +109,8 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create line_num -datatype integer -not_null true
 	    ::xo::db::Attribute create unity_id -datatype integer \
 		-references "[::alt::Unity table_name]([alt::Unity id_column])" -index true	    
+	    ::xo::db::Attribute create vat_id -datatype integer \
+		-references "[::alt::VAT table_name]([alt::VAT id_column])" -index true
 	}
 
     foreach col {invoice_id product_id} {

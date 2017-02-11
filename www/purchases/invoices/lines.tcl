@@ -1,7 +1,5 @@
 ad_page_contract {
 
-  @author Claudio Pasolini
-  @cvs-id bid-line-add-edit.tcl
 
 } {
     invoice_id:naturalnum
@@ -42,7 +40,7 @@ if {[info exists item_id] && [::xo::db::Class exists_in_db -id $item_id]} {
     } else {
 	set page_title "#altered.View_Purchase_Invoice_Line#"
 	set mode view
-    }    
+    }
 } else {
     if {!$confirmed_p} {
 	set page_title "#altered.Create_Purchase_Invoice_Line#"
@@ -76,6 +74,10 @@ if {$show_form_p} {
 		{label "#altered.Unit_of_Measurement#"}
 		{html {readonly ""}}
 	    }
+	    {vat_id:text(select),optional
+		{options {{"..." ""} [alt::vat::selbox]}}
+		{label "#altered.VAT#"}
+	    }
 	    {qty:text
 		{label "#altered.Quantity#"}
 	    }
@@ -85,7 +87,7 @@ if {$show_form_p} {
 	} -on_request {
 
 	    if {[$data exists object_id]} {
-		foreach var {product_id description qty price unity_id} {
+		foreach var {product_id description qty price vat_id unity_id} {
 		    template::element::set_value $form_name $var [$data set $var]
 		}
 	    }
@@ -94,7 +96,7 @@ if {$show_form_p} {
 
 	    if {$product_id ne ""} {
 	    	set product [::xo::db::Class get_instance_from_db -id $product_id]
-		foreach var {description price unity_id} {
+		foreach var {description price vat_id unity_id} {
 		    template::element::set_value $form_name $var [$product set $var]
 		}
 	    }
@@ -106,6 +108,7 @@ if {$show_form_p} {
 	    $data set invoice_id  $invoice_id
 	    $data set product_id  $product_id
 	    $data set unity_id    $unity_id
+	    $data set vat_id      $vat_id
 	    $data set qty         $qty
 	    $data set price       $price
 	    $data set description $description
@@ -122,15 +125,15 @@ if {$show_form_p} {
 	    ad_returnredirect [export_vars -base [ad_conn url] {invoice_id}]
 	    ad_script_abort
 	}
-    
+
     set field product_id
     set package_url [ad_conn package_url]
-	    
+
     template::add_body_script -type text/javascript -script [subst -nocommands {
 	\$(function() {
 	    var comboFields = [['$field', '${package_url}ac-ws/products']];
 	    ahAutocomplete(comboFields);
-	    
+
 	    var e = document.getElementById('$form_name').elements.namedItem('$field').previousElementSibling;
 	    if (e !== null) {
 		e.addEventListener('blur', function (event) {

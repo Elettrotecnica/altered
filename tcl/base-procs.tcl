@@ -122,7 +122,7 @@ namespace eval ::alt {
     #
     ## Unities of measurement
     #
-    
+
     ::xo::db::Class create Unity \
 	-table_name "alt_unities_of_measurement" \
 	-pretty_name   "#altered.Unity_of_Measurement#" \
@@ -147,6 +147,22 @@ namespace eval ::alt {
     }
 
     #
+    ## VAT
+    #
+
+    ::xo::db::Class create VAT \
+	-id_column "vat_id" \
+    	-table_name "alt_vats" \
+	-pretty_name   "#altered.VAT#" \
+	-pretty_plural "#altered.VATs#" \
+	-superclass ::xo::db::Object -slots {
+	    ::xo::db::Attribute create code -datatype text -not_null true -unique true
+	    ::xo::db::Attribute create name -datatype text -not_null true
+	    ::xo::db::Attribute create rate -datatype number -not_null true
+	    ::xo::db::Attribute create undeductible_rate -datatype number -not_null true -default 0
+	}
+
+    #
     ## Product
     #
 
@@ -161,6 +177,8 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create price -datatype number
 	    ::xo::db::Attribute create unity_id -datatype integer \
 		-references "[::alt::Unity table_name]([alt::Unity id_column])" -index true
+	    ::xo::db::Attribute create vat_id -datatype integer \
+		-references "[::alt::VAT table_name]([alt::VAT id_column])" -index true
 	}
 
     ::xo::db::require sequence \
@@ -213,7 +231,7 @@ namespace eval ::alt {
     PaymentDate instproc paid_p {} {
 	return [expr {${:closing_date} ne ""}]
     }
-	
+
     PaymentDate instproc pay {} {
 	if {[:paid_p]} return
 	if {![info exists :paid_amount]  ||
@@ -233,7 +251,7 @@ namespace eval ::alt {
 	set p [Payment new -volatile \
 		   -date_id ${:date_id} \
 		   -date ${:closing_date} \
-		   -amount ${:paid_amount}]	
+		   -amount ${:paid_amount}]
 	$p save_new
 	:save
     }

@@ -33,6 +33,9 @@ set elements {
     um_code {
 	label "UM"
     }
+    vat_code {
+	label "#altered.VAT#"
+    }
     qty {
 	label "#altered.Quantity#"
 	html {align right}
@@ -80,7 +83,10 @@ db_multirow -extend {
                l.product_id, 
 
                (select code from alt_unities_of_measurement
-		  where unity_id = p.unity_id) as um_code,
+		  where unity_id = l.unity_id) as um_code,
+               (select code from alt_vats
+		  where vat_id = l.vat_id) as vat_code,
+
                p.code as product_code,
 
                coalesce(l.description, p.name)            as product_description,
