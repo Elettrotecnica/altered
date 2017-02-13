@@ -41,7 +41,7 @@ ad_proc -public alt::um::selbox {
     measure defined on the system
 
 } {
-    return [ns_memoize [::alt::selbox -class ::alt::Unity]]
+    return [ns_memoize [list ::alt::selbox -class ::alt::Unity]]
 }
 
 namespace eval alt {}
