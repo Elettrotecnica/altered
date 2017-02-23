@@ -23,6 +23,7 @@
   <msg key="Create_Sale_Invoice_Line">Crea Riga Fattura di vendita</msg>
   <msg key="Create_VAT">Crea IVA</msg>
   <msg key="Date">Data</msg>
+  <msg key="Deductible_Tax_Amount">IVA</msg>
   <msg key="Delete_Line">Elimina Riga</msg>
   <msg key="Delete_this_invoice">Elimina questa fattura</msg>
   <msg key="Description">Descrizione</msg>
@@ -88,6 +89,7 @@
   <msg key="To_amount">A importo</msg>
   <msg key="To_date">A data</msg>
   <msg key="Undeductible_Rate">Aliquota Indeducibile</msg>
+  <msg key="Undeductible_Tax_Amount">IVA Deducibile</msg>
   <msg key="Unit_of_Measurement">Unità di Misura</msg>
   <msg key="VAT">IVA</msg>
   <msg key="VAT_Number">Paetita IVA</msg>

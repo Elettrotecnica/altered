@@ -84,10 +84,19 @@ if {$show_form_p} {
 	    {price:text
 		{label "#altered.Price#"}
 	    }
+	    {deductible_tax_amount:text,optional
+		{label "#altered.Deductible_Tax_Amount#"}
+	    }
+	    {undeductible_tax_amount:text,optional
+		{label "#altered.Undeductible_Tax_Amount#"}
+	    }
 	} -on_request {
 
 	    if {[$data exists object_id]} {
-		foreach var {product_id description qty price vat_id unity_id} {
+		foreach var {
+		    product_id description qty price vat_id unity_id
+		    undeductible_tax_amount deductible_tax_amount
+		} {
 		    template::element::set_value $form_name $var [$data set $var]
 		}
 	    }
@@ -111,6 +120,8 @@ if {$show_form_p} {
 	    $data set vat_id      $vat_id
 	    $data set qty         $qty
 	    $data set price       $price
+	    $data set undeductible_tax_amount $undeductible_tax_amount
+	    $data set deductible_tax_amount   $deductible_tax_amount
 	    $data set description $description
 
 	    if {$mode eq "edit"} {

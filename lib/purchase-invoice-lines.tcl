@@ -33,15 +33,23 @@ set elements {
     um_code {
 	label "UM"
     }
-    vat_code {
-	label "#altered.VAT#"
-    }
     qty {
 	label "#altered.Quantity#"
 	html {align right}
     }
     price {
 	label "#altered.Price#"
+	html {align right}
+    }
+    vat_code {
+	label "#altered.VAT#"
+    }
+    deductible_tax_amount {
+	label "#altered.Deductible_Tax_Amount#"
+	html {align right}
+    }
+    undeductible_tax_amount {
+	label "#altered.Undeductible_Tax_Amount#"
 	html {align right}
     }
     line_price {
@@ -72,7 +80,6 @@ db_multirow -extend {
     edit_url
     view_url
     prod_view_url
-    line_price
     line_price_pretty
     delete_url
 } lines query "
@@ -91,7 +98,10 @@ db_multirow -extend {
 
                coalesce(l.description, p.name)            as product_description,
                l.qty,
-               l.price
+               l.price,
+               l.deductible_tax_amount,
+               l.undeductible_tax_amount,
+               (l.price + l.deductible_tax_amount + l.undeductible_tax_amount) * qty as line_price
          from  alt_purchase_invoice_lines l,
                alt_products p
 
@@ -103,8 +113,6 @@ db_multirow -extend {
 	set edit_url      [export_vars -base [ad_conn url] {invoice_id item_id}]
         set delete_url    [export_vars -base ${package_url}call {item_id {m delete} {return_url $this_url}}]
         set prod_view_url [export_vars -base ${package_url}products/edit {{item_id $product_id}}]
-
-	set line_price [expr {$price * $qty}]
 
 	set qty               [lc_numeric $qty]
 	set price             [lc_numeric $price]

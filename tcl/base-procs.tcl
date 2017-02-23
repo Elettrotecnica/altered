@@ -162,6 +162,12 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create undeductible_rate -datatype number -not_null true -default 0
 	}
 
+    VAT instproc calc_amounts {amount} {
+	return [list \
+		    [expr {$amount * (${:rate} / 100.0)}] \
+		    [expr {$amount * (${:undeductible_rate} / 100.0)}]]
+    }
+
     #
     ## Product
     #

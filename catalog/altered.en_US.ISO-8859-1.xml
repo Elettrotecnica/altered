@@ -23,6 +23,7 @@
   <msg key="Create_Sale_Invoice_Line">Create Sale Invoice Line</msg>
   <msg key="Create_VAT">Create VAT</msg>
   <msg key="Date">Date</msg>
+  <msg key="Deductible_Tax_Amount">Deductible VAT</msg>
   <msg key="Delete_Line">Delete Line</msg>
   <msg key="Delete_this_invoice">Delete this invoice</msg>
   <msg key="Description">Description</msg>
@@ -88,6 +89,7 @@
   <msg key="To_amount">To amount</msg>
   <msg key="To_date">To date</msg>
   <msg key="Undeductible_Rate">Undeductible Rate</msg>
+  <msg key="Undeductible_Tax_Amount">Undeductible VAT</msg>
   <msg key="Unit_of_Measurement">Unit of Measurement</msg>
   <msg key="VAT">VAT</msg>
   <msg key="VAT_Number">VAT Number</msg>
