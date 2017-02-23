@@ -59,7 +59,7 @@ set elements {
 	aggregate "sum"
     }
     delete {
-	link_url_col delete_url 
+	link_url_col delete_url
 	display_template {<img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0">}
 	link_html {title "#altered.Delete_Line#" class confirm}
 	sub_class narrow
@@ -83,11 +83,11 @@ db_multirow -extend {
     line_price_pretty
     delete_url
 } lines query "
-	select line_num, 
+	select line_num,
                l.invoice_id,
                l.invoice_line_id as item_id,
                l.invoice_line_id as line_id,
-               l.product_id, 
+               l.product_id,
 
                (select code from alt_unities_of_measurement
 		  where unity_id = l.unity_id) as um_code,
@@ -105,7 +105,7 @@ db_multirow -extend {
          from  alt_sale_invoice_lines l,
                alt_products p
 
-        where l.invoice_id = :item_id  
+        where l.invoice_id = :item_id
           and l.product_id   = p.product_id
 
      order by  line_num
@@ -114,9 +114,11 @@ db_multirow -extend {
         set delete_url    [export_vars -base ${package_url}call {item_id {m delete} {return_url $this_url}}]
         set prod_view_url [export_vars -base ${package_url}products/edit {{item_id $product_id}}]
 
-	set qty               [lc_numeric $qty]
-	set price             [lc_numeric $price]
-	set line_price_pretty [lc_numeric $line_price]
+	set qty                     [lc_numeric $qty]
+	set price                   [lc_numeric $price]
+	set deductible_tax_amount   [lc_numeric $deductible_tax_amount]
+	set undeductible_tax_amount [lc_numeric $undeductible_tax_amount]
+	set line_price_pretty       [lc_numeric $line_price]
     }
 
 template::add_confirm_handler \
