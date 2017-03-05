@@ -6,6 +6,7 @@
   <msg key="Amount">Importo</msg>
   <msg key="Approved__F">Approvata</msg>
   <msg key="Are_you_sure_you_want_to_delete?">Sei sicuro/a di voler eliminare?</msg>
+  <msg key="Attachments">Allegati</msg>
   <msg key="Business_Name">Ragione Sociale</msg>
   <msg key="City">Città</msg>
   <msg key="Closing_Date">Data Chiusura</msg>
@@ -80,7 +81,9 @@
   <msg key="SaleInvoice">Fattura di Vendita</msg>
   <msg key="SaleInvoiceLines">Righe Fattura di Vendita</msg>
   <msg key="SaleInvoices">Fatture di Vendita</msg>
+  <msg key="Search_file_name">Cerca nome file</msg>
   <msg key="Search_invoice_num">Cerca num. fattura</msg>
+  <msg key="Search_name">Cerca nome</msg>
   <msg key="Search_party_code">Cerca cod. soggetto</msg>
   <msg key="Search_party_name">Cerca nome soggetto</msg>
   <msg key="Street">Via/Piazza</msg>
@@ -95,6 +98,7 @@
   <msg key="VAT_Number">Paetita IVA</msg>
   <msg key="VATs">IVA</msg>
   <msg key="VATs_List">Lista IVA</msg>
+  <msg key="View_attachments">Vedi allegati</msg>
   <msg key="View_Purchase_Invoice_Line">Vedi Riga Fattura d&#39;Acquisto</msg>
   <msg key="View_Sale_Invoice_Line">Vedi Fattura di Vendita</msg>
   <msg key="Zone">Zona</msg>

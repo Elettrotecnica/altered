@@ -6,6 +6,7 @@
   <msg key="Amount">Amount</msg>
   <msg key="Approved__F">Approved</msg>
   <msg key="Are_you_sure_you_want_to_delete?">Are you sure you want to delete?</msg>
+  <msg key="Attachments">Attachments</msg>
   <msg key="Business_Name">Business Name</msg>
   <msg key="City">City</msg>
   <msg key="Closing_Date">Closing Date</msg>
@@ -80,7 +81,9 @@
   <msg key="SaleInvoice">Sale Invoice</msg>
   <msg key="SaleInvoiceLines">Sale Invoice Lines</msg>
   <msg key="SaleInvoices">Sale Invoices</msg>
+  <msg key="Search_file_name">Search file name</msg>
   <msg key="Search_invoice_num">Search invoice num.</msg>
+  <msg key="Search_name">Search name</msg>
   <msg key="Search_party_code">Search party code</msg>
   <msg key="Search_party_name">Search party name</msg>
   <msg key="Street">Street</msg>
@@ -95,6 +98,7 @@
   <msg key="VAT_Number">VAT Number</msg>
   <msg key="VATs">VATs</msg>
   <msg key="VATs_List">VATs List</msg>
+  <msg key="View_attachments">View attachments</msg>
   <msg key="View_Purchase_Invoice_Line">View Purchase Invoice Line</msg>
   <msg key="View_Sale_Invoice_Line">View Sale Invoice Line</msg>
   <msg key="Zone">Zone</msg>

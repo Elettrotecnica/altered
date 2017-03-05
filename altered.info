@@ -8,18 +8,22 @@
     <singleton-p>f</singleton-p>
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>f</inherit-templates-p>
-    
-    <version name="0.1d" url="http://openacs.org/repository/download/apm/altered-0.1d.apm">
-        <owner url="mailto:antonio.pisano.it@gmail.com">Antonio Pisano</owner>
+
+    <version name="0.2d" url="http://openacs.org/repository/download/apm/altered-0.2d.apm">
+        <owner url="mailto:antonio@elettrotecnica.it">Antonio Pisano</owner>
         <summary>Xotcl based ERP born inspired by the Alter Italian ERP for OpenACS</summary>
         <vendor>Antonio Pisano</vendor>
-        <description format="text/html">Xotcl based ERP born inspired by the Alter Italian ERP for OpenACS</description>
+        <description format="text/html">Xotcl based ERP inspired by the Alter Italian ERP for OpenACS</description>
         <maturity>0</maturity>
 
-        <provides url="altered" version="0.1d"/>
+        <provides url="altered" version="0.2d"/>
         <requires url="xotcl-core" version="0.149"/>
+        <requires url="attachments" version="0.11d3"/>
+        <requires url="acs-datetime" version="5.9.1b3"/>
 
         <callbacks>
+          <callback type="after-mount"  proc="alt::apm::after_mount"/>
+	  <callback type="after-upgrade"  proc="alt::apm::upgrade_callback"/>
         </callbacks>
         <parameters>
         <!-- No version parameters -->

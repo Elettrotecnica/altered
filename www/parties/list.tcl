@@ -6,8 +6,13 @@ ad_page_contract {
     page:naturalnum,optional
 }
 
-set page_title "#altered.Parties_List#"
+set page_title [_ altered.Parties_List]
 set context [list $page_title]
+
+set package_url [ad_conn package_url]
+
+set this_url [export_vars -base [ad_conn url] -entire_form -no_empty]
+set next_context [list [list $this_url $page_title]]
 
 # Must be an existing acs_object class on the system.
 ::alt::Package initialize
@@ -21,6 +26,12 @@ set class "::alt::Party"
     -edit_url "edit" \
     -create_url "edit" \
     -elements {
+        attach {
+	    link_url_col attach_url
+	    display_template {<img src="/resources/acs-subsite/attach.png" width="16" height="16">}
+	    link_html {title "#altered.View_attachments#"}
+	    sub_class narrow
+	}	
 	code {
 	    label "#altered.Code#"
 	}
@@ -68,6 +79,8 @@ set class "::alt::Party"
                    where iso = :country"]
 	    }
 	}
+
+	set attach_url [export_vars -base "${package_url}attachments-list" {{object_id $party_id} {context $next_context}}]
     }
 
 list1 generate

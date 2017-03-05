@@ -7,7 +7,19 @@ ad_library {
 }
 
 namespace eval alt {}
-namespace eval alt::um {}
+
+ad_proc -public alt::file_extensions_selbox {
+} {
+    Returns selbox for all file types supported
+    by the content repository
+} {
+    return [ns_memoize [list ::xo::dc list_of_lists query {
+	select trim(file_extension), mime_type
+	from cr_mime_types
+	where mime_type <> '*/*'
+	order by file_extension asc
+    }]]
+}
 
 ad_proc -public alt::selbox {
     -class:required

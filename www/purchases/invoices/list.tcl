@@ -11,14 +11,18 @@ ad_page_contract {
     {to_amount              ""}
     {f_is_confirmed_p       ""}
     {f_is_paid_p            ""}
+    {f_has_attachment_p     ""}
 
     {rows_per_page:naturalnum 30}
     orderby:optional
     page:naturalnum,optional
 }
 
-set page_title "#altered.Purchase_Invoices_List#"
+set page_title [_ altered.Purchase_Invoices_List]
 set context [list $page_title]
+
+set this_url [export_vars -base [ad_conn url] -entire_form -no_empty]
+set next_context [list [list $this_url $page_title]]
 
 # creates filters form
 set validated_p t
@@ -72,6 +76,11 @@ ad_form \
 	    {label "#altered.Paid__F#?"}
 	    {value $f_is_paid_p}
 	}
+    	{f_has_attachment_p:text(select),optional
+	    {options {{[_ acs-kernel.common_All] ""} {[_ acs-kernel.common_Yes] t} {[_ acs-kernel.common_No] f}}}
+	    {label "#altered.With_attachments?#"}
+	    {value $f_has_attachment_p}
+	}	
     } -on_request {
 
 	if {$from_date eq ""} {
@@ -154,6 +163,12 @@ template::list::create \
 	    link_html {title "#altered.Edit_Invoice#"}
 	    sub_class narrow
 	}
+        attach {
+	    link_url_col attach_url
+	    display_template {<img src="/resources/acs-subsite/attach.png" width="16" height="16">}
+	    link_html {title "#altered.View_attachments#"}
+	    sub_class narrow
+	}	
         invoice_num {
 	    label "#altered.Invoice_Num#"
 	    link_url_col lines_url
@@ -257,6 +272,10 @@ template::list::create \
             hide_p 1
 	    where_clause {(:f_is_paid_p is null or (amount = paid_amount) = :f_is_paid_p)}
         }
+	f_has_attachment_p {
+	    hide_p 1
+	    where_clause { (:f_has_attachment_p is null or (exists (select 1 from attachments where object_id = invoice_id)) = :f_has_attachment_p) }
+	}	
         rows_per_page {
 	    label "#altered.Rows_per_page#"
   	    values {{10 10} {30 30} {100 100} {"#acs-kernel.common_All#" 9999999}}
@@ -269,6 +288,7 @@ template::list::create \
 if {$validated_p} {
     set extend_cols {
 	edit_url
+	attach_url
 	lines_url
 	party_url
 	approve_reset_url
@@ -299,6 +319,8 @@ if {$validated_p} {
 	set delete_url [export_vars -base "${package_url}call" {{m delete} {item_id $invoice_id} {return_url $this_url}}]
 
 	set payments_url [export_vars -base "${package_url}payment-dates/list" {{document_id $invoice_id} {return_url $this_url}}]
+
+	set attach_url [export_vars -base "${package_url}attachments-list" {{object_id $invoice_id} {context $next_context}}]	
 
 	set date_pretty [lc_time_fmt $date %x]
 	set amount_pretty      [lc_numeric $amount]
