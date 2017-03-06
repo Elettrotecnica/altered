@@ -78,7 +78,7 @@ ad_form \
 	}
     	{f_has_attachment_p:text(select),optional
 	    {options {{[_ acs-kernel.common_All] ""} {[_ acs-kernel.common_Yes] t} {[_ acs-kernel.common_No] f}}}
-	    {label "#altered.With_attachments?#"}
+	    {label "[_ altered.With_attachments?]"}
 	    {value $f_has_attachment_p}
 	}
     } -on_request {
