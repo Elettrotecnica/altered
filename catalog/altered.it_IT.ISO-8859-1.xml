@@ -95,7 +95,7 @@
   <msg key="Undeductible_Tax_Amount">IVA Deducibile</msg>
   <msg key="Unit_of_Measurement">Unità di Misura</msg>
   <msg key="VAT">IVA</msg>
-  <msg key="VAT_Number">Paetita IVA</msg>
+  <msg key="VAT_Number">Partita IVA</msg>
   <msg key="VATs">IVA</msg>
   <msg key="VATs_List">Lista IVA</msg>
   <msg key="View_attachments">Vedi allegati</msg>
