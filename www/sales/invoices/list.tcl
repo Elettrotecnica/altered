@@ -202,6 +202,12 @@ template::list::create \
 	    link_html {title "[_ altered.Confirm-Reset]"}
 	    html {align center}
 	}
+	print {
+	    label ""
+	    link_url_col print_url
+	    display_template "#altered.Print#"
+	    html {align center}
+	}	
 	is_paid_p {
 	    label "#altered.Completely_Paid#"
 	    html {align center}
@@ -292,6 +298,7 @@ if {$validated_p} {
 	lines_url
 	party_url
 	approve_reset_url
+	print_url
 	delete_url
 	paid_amount_pretty
 	payments_url
@@ -308,6 +315,7 @@ if {$validated_p} {
 
 	set edit_url   [export_vars -base "edit" {{item_id $invoice_id}}]
 	set lines_url  [export_vars -base "lines" {invoice_id}]
+	set print_url  [export_vars -base "print" {invoice_id}]
 	set party_url  [export_vars -base "${package_url}parties/edit" {{item_id $party_id}}]
 
 	if {$confirmed_p} {
