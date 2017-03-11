@@ -101,5 +101,6 @@
   <msg key="View_attachments">Vedi allegati</msg>
   <msg key="View_Purchase_Invoice_Line">Vedi Riga Fattura d&#39;Acquisto</msg>
   <msg key="View_Sale_Invoice_Line">Vedi Fattura di Vendita</msg>
+  <msg key="With_attachments?">Con allegati?</msg>
   <msg key="Zone">Zona</msg>
 </message_catalog>

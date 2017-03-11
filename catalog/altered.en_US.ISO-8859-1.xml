@@ -101,5 +101,6 @@
   <msg key="View_attachments">View attachments</msg>
   <msg key="View_Purchase_Invoice_Line">View Purchase Invoice Line</msg>
   <msg key="View_Sale_Invoice_Line">View Sale Invoice Line</msg>
+  <msg key="With_attachments?">With attachments?</msg>
   <msg key="Zone">Zone</msg>
 </message_catalog>
