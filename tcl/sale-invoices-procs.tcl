@@ -94,6 +94,70 @@ namespace eval ::alt {
 	:save
     }
 
+    SaleInvoice instproc print {} {
+	# header data
+	set invoice_num  ${:invoice_num}
+	set invoice_date [lc_time_fmt ${:date} %x]
+
+	# party data
+	set party [::xo::db::Class get_instance_from_db -id ${:party_id}]
+	set party_name [$party set title]
+	
+	# lines
+	set tot_amount 0
+	set tot_tax_amount 0
+	db_multirow -local lines get_lines "
+	    select
+	       p.code,
+	       p.name,
+	       l.price,
+	       l.qty,
+	       l.price * l.qty as amount,
+	       l.deductible_tax_amount + l.undeductible_tax_amount as tax_amount
+	    from [::alt::SaleInvoiceLine table_name] l,
+	         [::alt::Product table_name] p
+	   where l.invoice_id = ${:invoice_id}
+	     and l.product_id = p.product_id
+	" {
+	    set tot_amount     [expr {$tot_amount + $amount}]
+	    set tot_tax_amount [expr {$tot_tax_amount + $tax_amount}]
+	    
+	    set amount     [lc_numeric $amount]
+	    set tax_amount [lc_numeric $tax_amount]
+	    set price      [lc_numeric $price]
+	    set qty        [lc_numeric $qty]
+	}
+
+	set final_amount [expr {$tot_amount + $tot_tax_amount}]
+
+	set tot_amount     [lc_numeric $tot_amount]
+	set tot_tax_amount [lc_numeric $tot_tax_amount]
+	set final_amount   [lc_numeric $final_amount]
+
+	set fodt_file [ad_tmpnam].fodt
+
+	# this method will use currently executed adp as template for
+	# the generation of the pdf. This means the adp file should be
+	# in fact a fodt document.
+	set fodt_template [ad_conn file]
+	
+	# compile the template and generate fodt markup
+	set code [ns_memoize [list template::adp_compile -file $fodt_template]]
+	set wfd [open $fodt_file w]
+	fconfigure $wfd -encoding utf-8
+	puts $wfd [string trim [template::adp_eval code]]
+	close $wfd
+
+	set pdf_file [alt::office::convert $fodt_file pdf]	
+
+	ns_set update [ns_conn outputheaders] content-disposition "attachment; filename=print.pdf"
+	ns_returnfile 200 "application/pdf" $pdf_file
+
+	file delete $fodt_file $pdf_file
+
+	ad_script_abort
+    }
+
     #
     ## Sale invoice line
     #
