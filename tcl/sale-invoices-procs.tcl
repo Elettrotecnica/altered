@@ -97,7 +97,7 @@ namespace eval ::alt {
     SaleInvoice instproc print {} {
 	# header data
 	set invoice_num  ${:invoice_num}
-	set invoice_date [lc_time_fmt ${:date} %x]
+	set invoice_date [lc_time_fmt ${:date} %x]	
 
 	# party data
 	set party [::xo::db::Class get_instance_from_db -id ${:party_id}]
@@ -110,6 +110,8 @@ namespace eval ::alt {
 	    select
 	       p.code,
 	       p.name,
+               (select name from [::alt::VAT table_name]
+                 where vat_id = l.vat_id) as vat_name,
 	       l.price,
 	       l.qty,
 	       l.price * l.qty as amount,
