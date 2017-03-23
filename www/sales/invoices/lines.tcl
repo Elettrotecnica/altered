@@ -11,6 +11,7 @@ ad_page_contract {
 set class ::alt::SaleInvoiceLine
 
 set package_key [ad_conn package_key]
+set package_url [ad_conn package_url]
 template::head::add_javascript -src  "/resources/$package_key/javascript/jquery-ui/js/jquery-1.8.0.min.js" -order 0
 template::head::add_javascript -src  "/resources/$package_key/javascript/jquery-ui/js/jquery-ui-1.8.23.custom.min.js" -order 1
 template::head::add_css        -href "/resources/$package_key/javascript/jquery-ui/development-bundle/themes/base/jquery.ui.all.css"

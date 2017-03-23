@@ -4,7 +4,7 @@
 
 <h2>#altered.PurchaseInvoice#: <a href="edit?item_id=@invoice_id@">@invoice_num@</a></h2>
 <h2>#altered.Date#: @invoice_date@</h2>
-<h2>#altered.Party#: <a href="/@package_key@/parties/edit?item_id=@party_id@">@party_name@</a></h2>
+<h2>#altered.Party#: <a href="@package_url@parties/edit?item_id=@party_id@">@party_name@</a></h2>
 <hr/>
 <a class="button" href="@conf_reset_url@">
   <if @confirmed_p@ false>#altered.Confirm#</if>
