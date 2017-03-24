@@ -69,6 +69,7 @@
   <msg key="Product_Code">Codice Prodotto</msg>
   <msg key="Products">Prodotti</msg>
   <msg key="Products_List">Lista Prodotti</msg>
+  <msg key="Purchase">Acquisto</msg>
   <msg key="Purchase_Invoices_List">Lista Fattura d&#39;Acquisto</msg>
   <msg key="PurchaseInvoice">Fattura d&#39;Acquisto</msg>
   <msg key="PurchaseInvoiceLines">Righe Fattura d&#39;Acquisto</msg>
@@ -78,6 +79,7 @@
   <msg key="Region">Regione</msg>
   <msg key="Reset">Resetta</msg>
   <msg key="Rows_per_page">Righe per pagina</msg>
+  <msg key="Sale">Vendita</msg>
   <msg key="Sale_Invoices_List">Lista Fatture di Vendita</msg>
   <msg key="SaleInvoice">Fattura di Vendita</msg>
   <msg key="SaleInvoiceLines">Righe Fattura di Vendita</msg>
@@ -97,6 +99,7 @@
   <msg key="Unit_of_Measurement">Unità di Misura</msg>
   <msg key="VAT">IVA</msg>
   <msg key="VAT_Number">Partita IVA</msg>
+  <msg key="VAT_Summary">Riepilogo IVA</msg>
   <msg key="VATs">IVA</msg>
   <msg key="VATs_List">Lista IVA</msg>
   <msg key="View_attachments">Vedi allegati</msg>

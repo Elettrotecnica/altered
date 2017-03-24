@@ -69,6 +69,7 @@
   <msg key="Product_Code">Product Code</msg>
   <msg key="Products">Products</msg>
   <msg key="Products_List">Products List</msg>
+  <msg key="Purchase">Purchase</msg>
   <msg key="Purchase_Invoices_List">Purchase Invoices List</msg>
   <msg key="PurchaseInvoice">Purchase Invoice</msg>
   <msg key="PurchaseInvoiceLines">Purchase Invoice Lines</msg>
@@ -78,6 +79,7 @@
   <msg key="Region">Region</msg>
   <msg key="Reset">Reset</msg>
   <msg key="Rows_per_page">Rows per page</msg>
+  <msg key="Sale">Sale</msg>
   <msg key="Sale_Invoices_List">Sale Invoices List</msg>
   <msg key="SaleInvoice">Sale Invoice</msg>
   <msg key="SaleInvoiceLines">Sale Invoice Lines</msg>
@@ -97,6 +99,7 @@
   <msg key="Unit_of_Measurement">Unit of Measurement</msg>
   <msg key="VAT">VAT</msg>
   <msg key="VAT_Number">VAT Number</msg>
+  <msg key="VAT_Summary">VAT Summary</msg>
   <msg key="VATs">VATs</msg>
   <msg key="VATs_List">VATs List</msg>
   <msg key="View_attachments">View attachments</msg>
