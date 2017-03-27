@@ -115,7 +115,7 @@ namespace eval ::alt {
 	       l.price,
 	       l.qty,
 	       l.price * l.qty as amount,
-	       l.deductible_tax_amount + l.undeductible_tax_amount as tax_amount
+	       (l.deductible_tax_amount + l.undeductible_tax_amount) * l.qty as tax_amount
 	    from [::alt::SaleInvoiceLine table_name] l,
 	         [::alt::Product table_name] p
 	   where l.invoice_id = ${:invoice_id}
