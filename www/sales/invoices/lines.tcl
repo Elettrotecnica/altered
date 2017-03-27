@@ -84,7 +84,10 @@ if {$show_form_p} {
 	    {qty:text
 		{label "#altered.Quantity#"}
 	    }
-	    {price:text
+	    {gross_price:text,optional
+		{label "#altered.Gross_Price#"}
+	    }
+	    {price:text,optional
 		{label "#altered.Price#"}
 	    }
 	    {deductible_tax_amount:text,optional
@@ -115,6 +118,12 @@ if {$show_form_p} {
 
 	} -on_submit {
 
+	    if {$price eq ""} {
+		if {$gross_price eq ""} {
+		    template::form::set_error $form_name price [_ altered.Missing_price__errmsg]
+		}   
+	    }
+
 	    # if {![template::form is_valid $form_name]} break
 
 	    $data set invoice_id  $invoice_id
@@ -123,6 +132,7 @@ if {$show_form_p} {
 	    $data set vat_id      $vat_id
 	    $data set qty         $qty
 	    $data set price       $price
+	    $data set gross_price $gross_price
 	    $data set undeductible_tax_amount $undeductible_tax_amount
 	    $data set deductible_tax_amount   $deductible_tax_amount
 	    $data set description $description
