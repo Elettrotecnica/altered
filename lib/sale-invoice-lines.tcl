@@ -8,7 +8,7 @@ set package_url [ad_conn package_url]
 
 # prepare actions buttons
 set bulk_actions [subst {
-    "#acs-subsite.Delete#"  $package_url/call?m=delete "[_ altered.Delete_Line]"
+    "#acs-subsite.Delete#" $package_url/call?m=delete "[_ altered.Delete_Line]"
 }]
 
 set elements {
@@ -115,9 +115,10 @@ db_multirow -extend {
         set prod_view_url [export_vars -base ${package_url}products/edit {{item_id $product_id}}]
 
 	set qty                     [lc_numeric $qty]
-	set price                   [lc_numeric $price]
-	set deductible_tax_amount   [lc_numeric $deductible_tax_amount]
-	set undeductible_tax_amount [lc_numeric $undeductible_tax_amount]
+	set price                   [lc_numeric [format "%.2f" $price]]
+	set deductible_tax_amount   [lc_numeric [format "%.2f" $deductible_tax_amount]]
+	set undeductible_tax_amount [lc_numeric [format "%.2f" $undeductible_tax_amount]]
+	set line_price [format "%.2f" $line_price]
 	set line_price_pretty       [lc_numeric $line_price]
     }
 

@@ -63,6 +63,14 @@ namespace eval ::alt {
 	}
     }
 
+    SaleInvoice instproc delete {} {
+	if {${:confirmed_p}} return
+	::xo::dc dml delete "
+	    delete from alt_sale_invoice_lines
+	    where invoice_id = ${:invoice_id}"
+	next
+    }
+
     SaleInvoice instproc calc_amount {} {
 	return [::xo::dc get_value get_amount "
          select coalesce(
@@ -97,12 +105,12 @@ namespace eval ::alt {
     SaleInvoice instproc print {} {
 	# header data
 	set invoice_num  ${:invoice_num}
-	set invoice_date [lc_time_fmt ${:date} %x]	
+	set invoice_date [lc_time_fmt ${:date} %x]
 
 	# party data
 	set party [::xo::db::Class get_instance_from_db -id ${:party_id}]
 	set party_name [$party set title]
-	
+
 	# lines
 	set tot_amount 0
 	set tot_tax_amount 0
@@ -123,14 +131,16 @@ namespace eval ::alt {
 	" {
 	    set tot_amount     [expr {$tot_amount + $amount}]
 	    set tot_tax_amount [expr {$tot_tax_amount + $tax_amount}]
-	    
-	    set amount     [lc_numeric $amount]
-	    set tax_amount [lc_numeric $tax_amount]
-	    set price      [lc_numeric $price]
+
+	    set amount     [lc_numeric [format "%.2f" $amount]]
+	    set tax_amount [lc_numeric [format "%.2f" $tax_amount]]
+	    set price      [lc_numeric [format "%.2f" $price]]
 	    set qty        [lc_numeric $qty]
 	}
 
-	set final_amount [expr {$tot_amount + $tot_tax_amount}]
+	set final_amount   [format "%.2f" [expr {$tot_amount + $tot_tax_amount}]]
+	set tot_amount     [format "%.2f" $tot_amount]
+	set tot_tax_amount [format "%.2f" $tot_tax_amount]
 
 	set tot_amount     [lc_numeric $tot_amount]
 	set tot_tax_amount [lc_numeric $tot_tax_amount]
@@ -142,7 +152,7 @@ namespace eval ::alt {
 	# the generation of the pdf. This means the adp file should be
 	# in fact a fodt document.
 	set fodt_template [ad_conn file]
-	
+
 	# compile the template and generate fodt markup
 	set code [ns_memoize [list template::adp_compile -file $fodt_template]]
 	set wfd [open $fodt_file w]
@@ -150,7 +160,7 @@ namespace eval ::alt {
 	puts $wfd [string trim [template::adp_eval code]]
 	close $wfd
 
-	set pdf_file [alt::office::convert $fodt_file pdf]	
+	set pdf_file [alt::office::convert $fodt_file pdf]
 
 	ns_set update [ns_conn outputheaders] content-disposition "attachment; filename=print.pdf"
 	ns_returnfile 200 "application/pdf" $pdf_file
@@ -191,6 +201,11 @@ namespace eval ::alt {
     }
 
     SaleInvoiceLine instproc get_defaults {} {
+	set gross_p false
+	if {${:price} eq ""} {
+	    set :price ${:gross_price}
+	    set gross_p true
+	}
 	if {[info exists :product_id]} {
 	    if {${:description} eq ""} {
 		set :description [::xo::dc get_value get_name "
@@ -211,7 +226,8 @@ namespace eval ::alt {
 	if {${:vat_id} ne "" && ${:price} ne "" &&
 	    (${:undeductible_tax_amount} eq "" || ${:deductible_tax_amount} eq "")} {
 	    set vat [::xo::db::Class get_instance_from_db -id ${:vat_id}]
-	    set vat_amounts [$vat calc_amounts ${:price}]
+	    set vat_amounts [$vat calc_amounts -gross_p $gross_p ${:price}]
+	    set :price [lindex $vat_amounts 2]
 	    if {${:deductible_tax_amount} eq ""} {
 		set :deductible_tax_amount [lindex $vat_amounts 0]
 	    }

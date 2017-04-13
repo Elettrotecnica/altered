@@ -162,10 +162,20 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create undeductible_rate -datatype number -not_null true -default 0
 	}
 
-    VAT instproc calc_amounts {amount} {
-	return [list \
-		    [expr {$amount * (${:rate} / 100.0)}] \
-		    [expr {$amount * (${:undeductible_rate} / 100.0)}]]
+    VAT instproc calc_amounts {{-gross_p false} amount} {
+	if {$gross_p} {
+	    set amount_fraction [expr {double($amount) / (100.0 + double(${:undeductible_rate}) + double(${:rate}))}]
+	    util_user_message -message [expr {double($amount_fraction) * double(${:rate})}]
+	    return [list \
+			[expr {double($amount_fraction) * double(${:rate})}] \
+			[expr {double($amount_fraction) * double(${:undeductible_rate})}] \
+			[expr {double($amount_fraction) * 100.0}]]
+	} else {
+	    return [list \
+			[expr {double($amount) * (double(${:rate}) / 100.0)}] \
+			[expr {double($amount) * (double(${:undeductible_rate}) / 100.0)}] \
+			$amount]
+	}
     }
 
     #

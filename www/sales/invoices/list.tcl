@@ -331,6 +331,8 @@ if {$validated_p} {
 	set attach_url [export_vars -base "${package_url}attachments-list" {{object_id $invoice_id} {context $next_context}}]	
 
 	set date_pretty [lc_time_fmt $date %x]
+	set amount      [format "%.2f" $amount]
+	set paid_amount [format "%.2f" $paid_amount]
 	set amount_pretty      [lc_numeric $amount]
 	set paid_amount_pretty [lc_numeric $paid_amount]
 
