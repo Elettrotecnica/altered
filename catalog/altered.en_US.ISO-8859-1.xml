@@ -41,6 +41,7 @@
   <msg key="From_date">From date</msg>
   <msg key="Go_to_invoice_lines">Go to invoice lines</msg>
   <msg key="Go_to_party">Go to party</msg>
+  <msg key="Gross_Price">Gross Price</msg>
   <msg key="Invoice_Num">Invoice Num</msg>
   <msg key="Invoice_Year">Invoice Year</msg>
   <msg key="Kilogram">Kilogram</msg>
@@ -50,6 +51,7 @@
   <msg key="Location_Info">Location Info</msg>
   <msg key="Main_Info">Main Info</msg>
   <msg key="Main_Menu">Main Menu</msg>
+  <msg key="Missing_price__errmsg">You must specify a price</msg>
   <msg key="Name">Name</msg>
   <msg key="New_Invoice__Long">Create a new invoice</msg>
   <msg key="New_Invoice__Short">New Invoice</msg>

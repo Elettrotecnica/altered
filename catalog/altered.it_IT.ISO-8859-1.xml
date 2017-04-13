@@ -41,6 +41,7 @@
   <msg key="From_date">Da data</msg>
   <msg key="Go_to_invoice_lines">Vai alle righe fattura</msg>
   <msg key="Go_to_party">Vai al soggetto</msg>
+  <msg key="Gross_Price">Prezzo Lordo</msg>
   <msg key="Invoice_Num">Numero Fattura</msg>
   <msg key="Invoice_Year">Anno Fattura</msg>
   <msg key="Kilogram">Kilogrammo</msg>
@@ -50,6 +51,7 @@
   <msg key="Location_Info">Locazione</msg>
   <msg key="Main_Info">Informazioni Base</msg>
   <msg key="Main_Menu">Menu Principale</msg>
+  <msg key="Missing_price__errmsg">Devi specificare un prezzo</msg>
   <msg key="Name">Nome</msg>
   <msg key="New_Invoice__Long">Crea una nuova fattura</msg>
   <msg key="New_Invoice__Short">Nuova Fattura</msg>
