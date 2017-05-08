@@ -37,6 +37,7 @@
   <msg key="Edit_Purchase_Invoice_Line">Edit Purchase Invoice Line</msg>
   <msg key="Edit_Sale_Invoice">Edit Sale Invoice</msg>
   <msg key="Edit_Sale_Invoice_Line">Edit Sale Invoice Line</msg>
+  <msg key="Export_to_csv">Export to CSV</msg>
   <msg key="From_amount">From amount</msg>
   <msg key="From_date">From date</msg>
   <msg key="Go_to_invoice_lines">Go to invoice lines</msg>

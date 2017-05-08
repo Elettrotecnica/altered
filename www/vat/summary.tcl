@@ -5,6 +5,8 @@ ad_page_contract {
     month:naturalnum,optional
 
     orderby:optional
+
+    {format normal}
 }
 
 set page_title [_ altered.VAT_Summary]
@@ -47,7 +49,9 @@ set from_date $year-$month-01
 set to_date [clock format [clock add [clock scan $from_date] 1 month -1 day] -format %Y-%m-%d]
 
 # prepare actions buttons
-set actions {}
+set actions [list \
+                 [_ acs-templating.CSV] [export_vars -base [ad_conn url] -entire_form -no_empty {{format csv-purch}}] [_ altered.Export_to_csv] \
+                ]
 
 set bulk_actions {}
 
@@ -61,17 +65,17 @@ template::list::create \
     -bulk_action_method "post" \
     -elements {
 	vat_name {
-	    label "#altered.VAT#"
+	    label "[_ altered.VAT]"
 	}
 	deductible_amount {
 	    display_col deductible_amount_pretty
-	    label "#altered.Deductible_Tax_Amount#"
+	    label "[_ altered.Deductible_Tax_Amount]"
 	    html {align right}
 	    aggregate "sum"
 	}
 	undeductible_amount {
 	    display_col undeductible_amount_pretty
-	    label "#altered.Undeductible_Tax_Amount#"
+	    label "[_ altered.Undeductible_Tax_Amount]"
 	    html {align right}
 	    aggregate "sum"
 	}
@@ -124,7 +128,9 @@ if {$validated_p} {
 
 
 # prepare actions buttons
-set actions {}
+set actions [list \
+                 [_ acs-templating.CSV] [export_vars -base [ad_conn url] -entire_form -no_empty {{format csv-sales}}] [_ altered.Export_to_csv] \
+                ]
 
 set bulk_actions {}
 
@@ -138,17 +144,17 @@ template::list::create \
     -bulk_action_method "post" \
     -elements {
 	vat_name {
-	    label "#altered.VAT#"
+	    label "[_ altered.VAT]"
 	}
 	deductible_amount {
 	    display_col deductible_amount_pretty
-	    label "#altered.Deductible_Tax_Amount#"
+	    label "[_ altered.Deductible_Tax_Amount]"
 	    html {align right}
 	    aggregate "sum"
 	}
 	undeductible_amount {
 	    display_col undeductible_amount_pretty
-	    label "#altered.Undeductible_Tax_Amount#"
+	    label "[_ altered.Undeductible_Tax_Amount]"
 	    html {align right}
 	    aggregate "sum"
 	}
@@ -197,4 +203,13 @@ if {$validated_p} {
 
     # create a fake multirow
     template::multirow create salesummary dummy
+}
+
+
+if {$format eq "csv-sales"} {
+    template::list::write_csv -name salesummary
+    ad_script_abort
+} elseif {$format eq "csv-purch"} {
+    template::list::write_csv -name purchsummary
+    ad_script_abort
 }

@@ -37,6 +37,7 @@
   <msg key="Edit_Purchase_Invoice_Line">Modifica Riga Fattura d&#39;Acquisto</msg>
   <msg key="Edit_Sale_Invoice">Modifica Fattura di Vendita</msg>
   <msg key="Edit_Sale_Invoice_Line">Modifica Riga Fattura di Vendita</msg>
+  <msg key="Export_to_csv">Esporta in CSV</msg>
   <msg key="From_amount">Da importo</msg>
   <msg key="From_date">Da data</msg>
   <msg key="Go_to_invoice_lines">Vai alle righe fattura</msg>
