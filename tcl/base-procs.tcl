@@ -34,6 +34,8 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create zone
 	    ::xo::db::Attribute create region
 	    ::xo::db::Attribute create country -references "countries(iso)"
+	    ::xo::db::Attribute create email
+	    ::xo::db::Attribute create phone
 	}
 
     #

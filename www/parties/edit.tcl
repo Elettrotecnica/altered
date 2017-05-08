@@ -61,6 +61,12 @@ ad_form -name addedit \
 	{loc_zone:text,optional
 	    {label #altered.Zone#}
 	}
+	{loc_email:text,optional
+	    {label #acs-subsite.Email#}
+	}
+	{loc_phone:text,optional
+	    {label #altered.Phone#}
+	}
 	{-section ""}
     } -edit_request {
 	foreach field {code title vat_number tax_code} {
@@ -69,18 +75,25 @@ ad_form -name addedit \
 	set location_id [$data get_main_location]
 	if {$location_id ne ""} {
 	    set loc [::xo::db::Class get_instance_from_db -id $location_id]
-	    foreach field {country street region zone city number name} {
+	    foreach field {country street region zone city number name email phone} {
 		set loc_$field [$loc set $field]
 	    }
 	}
     } -on_submit {
+
+        if {$loc_email ne "" && ![util_email_valid_p $loc_email]} {
+            template::form::set_error addedit code #acs-templating.Invalid_email_format#
+        }
 	if {[::xo::dc 0or1row check "
            select 1 from [$class table_name]
             where code = :code
               and [$class id_column] <> :item_id"]} {
 	    template::form::set_error addedit code #altered.Code_is_not_unique#
-	    break
 	}
+        if {![template::form::is_valid addedit]} {
+            break
+        }
+
 	foreach field {code title vat_number tax_code} {
 	    $data set $field [set $field]
 	}
@@ -89,7 +102,7 @@ ad_form -name addedit \
 	} else {
 	    set loc [::alt::Location new]
 	}
-	foreach field {country street region zone city number name} {
+        foreach field {country street region zone city number name email phone} {
 	    $loc set $field [set loc_$field]
 	}
 	if {$location_id ne ""} {

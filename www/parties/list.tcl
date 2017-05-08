@@ -31,7 +31,7 @@ set class "::alt::Party"
 	    display_template {<img src="/resources/acs-subsite/attach.png" width="16" height="16">}
 	    link_html {title "#altered.View_attachments#"}
 	    sub_class narrow
-	}	
+	}
 	code {
 	    label "#altered.Code#"
 	}
@@ -55,7 +55,14 @@ set class "::alt::Party"
 	}
 	loc_country {
 	    label "#acs-subsite.Country_Name#"
-	}	
+	}
+	loc_email {
+	    label "#acs-subsite.Email#"
+            link_url_col email_url
+	}
+	loc_phone {
+	    label "#altered.Phone#"
+	}
     } -orderby [subst {
 	default_value title
 	title {
@@ -69,15 +76,19 @@ set class "::alt::Party"
           where party_id = :party_id and main_p" ""]
 	if {$location_id ne ""} {
 	    set l [::xo::db::Class get_instance_from_db -id $location_id]
-	    foreach field {street region zone city number} {
+	    foreach field {street region zone city number email phone} {
 		set loc_$field [$l set $field]
 	    }
 	    set country [$l set country]
 	    if {$country ne ""} {
 		set loc_country [::xo::dc get_value country "
-                  select default_name from countries 
+                  select default_name from countries
                    where iso = :country"]
 	    }
+
+            if {$loc_email ne ""} {
+                set email_url "mailto:$loc_email"
+            }
 	}
 
 	set attach_url [export_vars -base "${package_url}attachments-list" {{object_id $party_id} {context $next_context}}]
