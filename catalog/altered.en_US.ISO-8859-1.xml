@@ -56,6 +56,7 @@
   <msg key="Name">Name</msg>
   <msg key="New_Invoice__Long">Create a new invoice</msg>
   <msg key="New_Invoice__Short">New Invoice</msg>
+  <msg key="Notes">Notes</msg>
   <msg key="Number">Number</msg>
   <msg key="Paid__F">Paid</msg>
   <msg key="Paid_Amount">Paid Amount</msg>

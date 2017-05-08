@@ -26,8 +26,11 @@ ad_form -name addedit \
 	    {label #altered.Code#}
 	    {html {readonly ""}}
 	}
-	{title:text
+ 	{title:text
 	    {label #altered.Business_Name#}
+	}
+	{notes:text(textarea),optional
+	    {label #altered.Notes#}
 	}
 	{vat_number:text,optional
 	    {label #altered.VAT_Number#}
@@ -69,7 +72,7 @@ ad_form -name addedit \
 	}
 	{-section ""}
     } -edit_request {
-	foreach field {code title vat_number tax_code} {
+	foreach field {code title vat_number tax_code notes} {
 	    set $field [$data set $field]
 	}
 	set location_id [$data get_main_location]
@@ -94,7 +97,7 @@ ad_form -name addedit \
             break
         }
 
-	foreach field {code title vat_number tax_code} {
+	foreach field {code title vat_number tax_code notes} {
 	    $data set $field [set $field]
 	}
 	if {$location_id ne ""} {

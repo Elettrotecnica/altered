@@ -51,6 +51,7 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create title -not_null true
 	    ::xo::db::Attribute create tax_code -unique true
 	    ::xo::db::Attribute create vat_number -unique true
+	    ::xo::db::Attribute create notes
 	}
 
     ::xo::db::require sequence \
