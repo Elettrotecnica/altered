@@ -117,7 +117,7 @@ namespace eval ::alt {
 	db_multirow -local lines get_lines "
 	    select
 	       p.code,
-	       p.name,
+	       coalesce(p.description, p.name) as name,
                (select name from [::alt::VAT table_name]
                  where vat_id = l.vat_id) as vat_name,
 	       l.price,
