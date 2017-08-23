@@ -38,6 +38,10 @@ namespace eval ::alt {
 	    ::xo::db::Attribute create phone
 	}
 
+    Location instproc format {} {
+	return "${:street} ${:number}, ${:city} (${:country})"
+    }    
+
     #
     ## Party
     #

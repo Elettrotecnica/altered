@@ -110,6 +110,13 @@ namespace eval ::alt {
 	# party data
 	set party [::xo::db::Class get_instance_from_db -id ${:party_id}]
 	set party_name [$party set title]
+	set vat_number [$party set vat_number]
+	set tax_code   [$party set tax_code]
+
+	# location data
+	set location_id [expr {${:location_id} ne "" ? ${:location_id} : [$party get_main_location]}]
+	set location [::xo::db::Class get_instance_from_db -id $location_id]
+	set address [$location format]	
 
 	# lines
 	set tot_amount 0
