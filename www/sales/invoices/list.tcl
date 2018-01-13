@@ -220,8 +220,8 @@ template::list::create \
 	}
     } \
     -orderby {
-        default_value "invoice_date,desc"
-        invoice_date {
+        default_value "date,desc"
+        date {
 	    label "#acs-datetime.Date#"
 	    orderby_asc "date asc, invoice_num asc"
 	    orderby_desc "date desc, invoice_num desc"
