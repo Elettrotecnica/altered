@@ -33,6 +33,31 @@ namespace eval ::alt {
 	::xo::db::require index -table [::alt::PurchaseInvoice table_name] -col $col
     }
 
+    PurchaseInvoice proc renumber {year} {
+	set num 1
+	set year_start $year-01-01
+	set year_end $year-12-31
+
+	foreach invoice_id [::xo::dc list get_sorted_year_invoices {
+	    select invoice_id from alt_purchase_invoices
+	    where date between :year_start and :year_end
+	    order by date asc, invoice_id asc
+	}] {
+	    set invoice_num [string repeat 0 [expr {6 - [string length $num]}]]$num/$year
+	    ::xo::dc dml move_to_temp {
+		update alt_purchase_invoices set
+		invoice_num = :invoice_num || '-temp'
+		where invoice_num = :invoice_num
+	    }
+	    ::xo::dc dml renumber {
+		update alt_purchase_invoices set
+		invoice_num = :invoice_num
+		where invoice_id = :invoice_id
+	    }
+	    incr num
+	}
+    }
+
     ::xo::db::require index \
 	-table [::alt::PurchaseInvoice table_name] \
 	-unique true -col "invoice_num,invoice_year"
