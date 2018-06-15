@@ -54,6 +54,12 @@ namespace eval ::alt {
 		invoice_num = :invoice_num
 		where invoice_id = :invoice_id
 	    }
+	    ::xo::dc dml update_counter {
+		update alt_counter_numbers set
+		number = :num,
+		date = (select date from alt_purchase_invoices where invoice_id = :invoice_id)
+		where document_id = :invoice_id
+	    }
 	    incr num
 	}
     }
