@@ -5,8 +5,8 @@
   <fullquery name="purc_multirow_query">
     <querytext>
       select v.name as vat_name,
-             sum(deductible_tax_amount) as deductible_amount,
-             sum(undeductible_tax_amount) as undeductible_amount
+             round(sum(deductible_tax_amount), 2) as deductible_amount,
+             round(sum(undeductible_tax_amount), 2) as undeductible_amount
 	from alt_purchase_invoice_lines l,
 	     alt_purchase_invoices i,
 	     alt_vats v
@@ -23,8 +23,8 @@
   <fullquery name="sale_multirow_query">
     <querytext>
       select v.name as vat_name,
-             sum(deductible_tax_amount) as deductible_amount,
-             sum(undeductible_tax_amount) as undeductible_amount
+             round(sum(deductible_tax_amount), 2) as deductible_amount,
+             round(sum(undeductible_tax_amount), 2) as undeductible_amount
 	from alt_sale_invoice_lines l,
 	     alt_sale_invoices i,
 	     alt_vats v
