@@ -22,7 +22,14 @@
 
   <fullquery name="multirow_query">
     <querytext>
-      select *
+      select invoice_id,
+             invoice_num,
+	     date,
+	     party_id,
+	     party_name,
+	     round(amount, 2) as amount,
+	     round(paid_amount, 2) as paid_amount,
+	     confirmed_p
       from alt_purchase_invoicesi
       where 1 = 1
       [template::list::page_where_clause -name invoices -key invoice_id -and]
