@@ -8,7 +8,7 @@ set package_url [ad_conn package_url]
 
 # prepare actions buttons
 set bulk_actions [subst {
-    "#acs-subsite.Delete#"  $package_url/call?m=delete "[_ altered.Delete_Line]"
+    "#acs-subsite.Delete#"  ${package_url}delete "[_ altered.Delete_Line]"
 }]
 
 set elements {
@@ -70,8 +70,7 @@ template::list::create \
     -name lines \
     -multirow lines \
     -bulk_actions $bulk_actions \
-    -bulk_action_export_vars {item_id} \
-    -key line_id \
+    -key item_id \
     -elements $elements
 
 set this_url [export_vars -base [ad_conn url] -entire_form -no_empty]
