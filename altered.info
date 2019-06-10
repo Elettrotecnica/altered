@@ -9,14 +9,14 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>f</inherit-templates-p>
 
-    <version name="0.2d" url="http://openacs.org/repository/download/apm/altered-0.2d.apm">
+    <version name="0.3d" url="http://openacs.org/repository/download/apm/altered-0.3d.apm">
         <owner url="mailto:antonio@elettrotecnica.it">Antonio Pisano</owner>
         <summary>Xotcl based ERP born inspired by the Alter Italian ERP for OpenACS</summary>
         <vendor>Antonio Pisano</vendor>
         <description format="text/html">Xotcl based ERP inspired by the Alter Italian ERP for OpenACS</description>
         <maturity>0</maturity>
 
-        <provides url="altered" version="0.2d"/>
+        <provides url="altered" version="0.3d"/>
         <requires url="xotcl-core" version="0.149"/>
         <requires url="attachments" version="0.11d3"/>
         <requires url="acs-datetime" version="5.9.1b3"/>

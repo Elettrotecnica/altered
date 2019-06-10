@@ -94,6 +94,106 @@ namespace eval ::alt {
 	}
     }
 
+    PurchaseInvoice proc fromXML {xml_file} {
+	set rfd [open $xml_file r]
+	dom parse [read $rfd] doc
+	close $rfd
+
+	$doc documentElement root
+
+	set invoice_date [[[lindex [$root selectNodes //FatturaElettronicaBody/DatiGenerali/DatiGeneraliDocumento/Data] 0] firstChild] nodeValue]
+
+	set vat_code   [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/DatiAnagrafici/IdFiscaleIVA/IdCodice] 0] \
+			      firstChild] nodeValue]
+	set party_name [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/DatiAnagrafici/Anagrafica/Denominazione] 0] \
+			      firstChild] nodeValue]
+	set party_id [::xo::dc get_value get_party {select party_id from alt_parties where vat_number = :vat_code} ""]
+	if {$party_id eq ""} {
+	    set p [::alt::Party new]
+	    $p set vat_number $vat_code
+	    $p set tax_code   $vat_code
+	    $p set title      $party_name
+	    set party_id [$p save_new]
+
+	    set street [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/Indirizzo] 0] \
+			      firstChild] nodeValue]
+	    set number [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/NumeroCivico] 0] \
+			      firstChild] nodeValue]
+	    set city  [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/Comune] 0] \
+			     firstChild] nodeValue]
+	    set province [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/Comune] 0] \
+				firstChild] nodeValue]
+	    set province [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/Provincia] 0] \
+				firstChild] nodeValue]
+	    set zipcode [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/Provincia] 0] \
+			       firstChild] nodeValue]
+	    set city "$city $zipcode (province)"
+	    set country [[[lindex [$root selectNodes //FatturaElettronicaHeader/CedentePrestatore/Sede/Nazione] 0] \
+			       firstChild] nodeValue]
+	    set name "Sede"
+	    set loc [::alt::Location new]
+	    foreach field {country street city number name} {
+		$loc set $field $field
+	    }
+
+	    set location_id [$loc save_new]
+	    ::xo::dc dml save_location {
+		insert into alt_party_locations (party_id, location_id, name, main_p
+						 ) values (
+							   :party_id, :location_id, :name, true)
+	    }
+	}
+
+	set invoice [::alt::PurchaseInvoice new]
+	$invoice set invoice_num ""
+	$invoice set date $invoice_date
+	$invoice set invoice_year [lindex [split $invoice_date -] 0]
+	$invoice set party_id $party_id
+	$invoice set description ""
+	$invoice save_new
+	set invoice_id [$invoice set invoice_id]
+
+
+	set unity_id [::xo::dc get_value get_unit {select unity_id from alt_unities_of_measurement where code = 'Num'}]
+	set product_id [::xo::dc get_value get_product {select product_id from alt_products where code = 'PROD'}]
+
+	foreach line [$root selectNodes //FatturaElettronicaBody/DatiBeniServizi/DettaglioLinee] {
+	    set data [::alt::PurchaseInvoiceLine new -volatile]
+	    set product_description [[[lindex [$line selectNodes Descrizione] 0] firstChild] nodeValue]
+	    set price [[[lindex [$line selectNodes PrezzoUnitario] 0] firstChild] nodeValue]
+	    set qty [[[lindex [$line selectNodes Quantita] 0] firstChild] nodeValue]
+	    set vat_rate [[[lindex [$line selectNodes AliquotaIVA] 0] firstChild] nodeValue]
+
+	    set vat_id [::xo::dc get_value get_vat {select vat_id from alt_vats where rate = :vat_rate} ""]
+	    if {$vat_id eq ""} {
+		set v [::alt::VAT new]
+		foreach {field value} {
+		    code "VAT$vat_rate"
+		    name "VAT $vat_rate %"
+		    rate $vat_rate
+		    undeductible_rate 0
+		} {
+		    $v set $field $value
+		}
+		set vat_id [$v save_new]
+	    }
+
+	    $data set invoice_id  $invoice_id
+	    $data set product_id  $product_id
+	    $data set unity_id    $unity_id
+	    $data set vat_id      $vat_id
+	    $data set qty         $qty
+	    $data set price       $price
+	    $data set description $product_description
+	    $data save_new
+	}
+
+	set invoice [::xo::db::Class get_instance_from_db -id $invoice_id]
+	$invoice confirm
+
+	return $invoice_id
+    }
+
     PurchaseInvoice instproc calc_amount {} {
 	return [::xo::dc get_value get_amount "
          select coalesce(

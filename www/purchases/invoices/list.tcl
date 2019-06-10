@@ -132,6 +132,7 @@ ad_form \
 # prepare actions buttons
 set actions {
     "#altered.New_Invoice__Short#" edit "#altered.New_Invoice__Long#"
+    "#altered.Load_XML#" fromXML "#altered.Load_XML#"
 }
 
 set bulk_actions {}
